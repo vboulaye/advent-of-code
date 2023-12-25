@@ -1,3 +1,5 @@
 .gradle
 .idea
 build
+zzdata.txt
+!**/dayzz/zzdata.txt
