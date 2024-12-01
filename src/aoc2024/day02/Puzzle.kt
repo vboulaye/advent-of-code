@@ -1,4 +1,4 @@
-package aoc2023.dayzz
+package aoc2024.day02
 
 import utils.readInput
 import kotlin.time.ExperimentalTime
