@@ -1,6 +1,7 @@
 package aoc2024.day01
 
 import utils.readInput
+import kotlin.math.abs
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -12,28 +13,32 @@ class Puzzle {
 
     fun String.acceptInput() = true
 
-    fun String.parseInput(): String {
-        return this
+    fun String.parseInput(): List<Int> {
+        return this.split(" +".toRegex()).map { it.toInt() }
     }
 
-    fun clean(input: List<String>): List<String> {
+    fun clean(input: List<String>): List<List<Int>> {
         return input
             .filter { line -> line.acceptInput() }
             .map { line -> line.parseInput() }
     }
 
-    val part1ExpectedResult = 0
+    val part1ExpectedResult = 11
     fun part1(rawInput: List<String>): Result {
         val input = clean(rawInput)
-
-        return 0
+        val left = input.map { it[0] }.sorted()
+        val right = input.map { it[1] }.sorted()
+        return left.mapIndexed { index, i -> abs(i - right[index]) }
+            .sum()
     }
 
-    val part2ExpectedResult = 0
+    val part2ExpectedResult = 31
     fun part2(rawInput: List<String>): Result {
         val input = clean(rawInput)
-
-        return 0
+        val left = input.map { it[0] }.sorted()
+        val right = input.map { it[1] }.sorted().groupBy {it}.mapValues { it.value.size }
+        return left.mapIndexed { index, i -> i*(right[i]?:0) }
+            .sum()
     }
 
 }
