@@ -26,19 +26,16 @@ class Puzzle {
     val part1ExpectedResult = 11
     fun part1(rawInput: List<String>): Result {
         val input = clean(rawInput)
-        val left = input.map { it[0] }.sorted()
-        val right = input.map { it[1] }.sorted()
-        return left.mapIndexed { index, i -> abs(i - right[index]) }
-            .sum()
+        val (left, right) = input.map { it[0] to it[1] }.unzip()
+        return left.sorted().zip(right.sorted()) { l, r -> abs(l - r) }.sum()
     }
 
     val part2ExpectedResult = 31
     fun part2(rawInput: List<String>): Result {
         val input = clean(rawInput)
-        val left = input.map { it[0] }.sorted()
-        val right = input.map { it[1] }.sorted().groupBy {it}.mapValues { it.value.size }
-        return left.mapIndexed { index, i -> i*(right[i]?:0) }
-            .sum()
+        val (left, right) = input.map { it[0] to it[1] }.unzip()
+        val rightIndex = right.groupingBy { it }.eachCount()
+        return left.sumOf { it * (rightIndex[it] ?: 0) }
     }
 
 }
