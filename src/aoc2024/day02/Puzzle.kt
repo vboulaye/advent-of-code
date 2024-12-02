@@ -1,6 +1,7 @@
 package aoc2024.day02
 
 import utils.readInput
+import kotlin.math.abs
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -12,28 +13,44 @@ class Puzzle {
 
     fun String.acceptInput() = true
 
-    fun String.parseInput(): String {
-        return this
+    fun String.parseInput(): List<Int> {
+        return this.split(" ").map { it.toInt() }
     }
 
-    fun clean(input: List<String>): List<String> {
+    fun clean(input: List<String>): List<List<Int>> {
         return input
             .filter { line -> line.acceptInput() }
             .map { line -> line.parseInput() }
     }
 
-    val part1ExpectedResult = 0
+    val part1ExpectedResult = 2
     fun part1(rawInput: List<String>): Result {
         val input = clean(rawInput)
-
-        return 0
+        return input.filter {
+            val progressions =
+                it.subList(0, it.size - 1).mapIndexed { index, i -> it[index + 1] - it[index] }
+            val qllplus = progressions.all { it > 0 && it <= 3 }
+            val allmoins = progressions.all { it < 0 && it >= -3 }
+            allmoins || qllplus
+        }.count()
     }
 
-    val part2ExpectedResult = 0
+    val part2ExpectedResult = 4
     fun part2(rawInput: List<String>): Result {
         val input = clean(rawInput)
+        return input.filter {
+            if (isok(it)) return@filter true
+            (0..it.size).map { i -> it.filterIndexed { index, x -> index != i } }.any { isok(it) }
+        }.count()
 
-        return 0
+    }
+
+    private fun isok(it: List<Int>): Boolean {
+        val progressions =
+            it.subList(0, it.size - 1).mapIndexed { index, i -> it[index + 1] - it[index] }
+        val qllplus = progressions.all { it > 0 && it <= 3 }
+        val allmoins = progressions.all { it < 0 && it >= -3 }
+        return (allmoins || qllplus)
     }
 
 }
