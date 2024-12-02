@@ -13,7 +13,10 @@ import kotlin.reflect.KClass
  * Reads lines from the given input txt file.
  */
 fun readInput(name: String, baseClass: KClass<*>) =
-    File(File("src", baseClass.qualifiedName!!.removeSuffix(".${baseClass.simpleName}").replace(".","/")), "$name.txt").readLines()
+    File(
+        File("src", baseClass.qualifiedName!!.removeSuffix(".${baseClass.simpleName}").replace(".", "/")),
+        "$name.txt"
+    ).readLines()
 
 
 /**
@@ -35,6 +38,9 @@ fun String.asBinary(): Int = this.toInt(2)
 fun <T : Comparable<T>> Iterable<T>.min(): T = this.minOrNull()!!
 fun <T : Comparable<T>> Iterable<T>.max(): T = this.maxOrNull()!!
 
+fun <E> List<E>.removeFirst() = this.subList(1, this.size)
+fun <E> List<E>.removeLast() = this.subList(0, this.size - 1)
+fun <E> List<E>.removeAt(index: Int) = this.filterIndexed { i, _ -> i != index }
 
 fun main() {
 
@@ -56,8 +62,8 @@ fun main() {
     check(Vector(Point(1, 1), Point(0, 0)).isDiagonal())
 }
 
-fun modByOne(value:Long, mod:Int) =  (value -1) % mod + 1
-fun modByOne(value:Int, mod:Int) =  (value -1) % mod + 1
+fun modByOne(value: Long, mod: Int) = (value - 1) % mod + 1
+fun modByOne(value: Int, mod: Int) = (value - 1) % mod + 1
 
 fun <T> checkEquals(testResult: T, expectedTestResult: T) {
     check(testResult == expectedTestResult) { "ERROR : $testResult != ${expectedTestResult}" }

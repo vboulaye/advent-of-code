@@ -1,7 +1,7 @@
 package aoc2024.day02
 
 import utils.readInput
-import kotlin.math.abs
+import utils.removeAt
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -9,7 +9,6 @@ typealias Result = Int
 
 
 class Puzzle {
-
 
     fun String.acceptInput() = true
 
@@ -26,31 +25,20 @@ class Puzzle {
     val part1ExpectedResult = 2
     fun part1(rawInput: List<String>): Result {
         val input = clean(rawInput)
-        return input.filter {
-            val progressions =
-                it.subList(0, it.size - 1).mapIndexed { index, i -> it[index + 1] - it[index] }
-            val qllplus = progressions.all { it > 0 && it <= 3 }
-            val allmoins = progressions.all { it < 0 && it >= -3 }
-            allmoins || qllplus
-        }.count()
+        return input.count { isSafeReport(it) }
+    }
+
+    private fun isSafeReport(it: List<Int>): Boolean {
+        val progressions = it.zipWithNext { a, b -> b - a }
+        val allPlus = progressions.all { it in 1..3 }
+        val allMoins = progressions.all { it in -3..-1 }
+        return allMoins || allPlus
     }
 
     val part2ExpectedResult = 4
     fun part2(rawInput: List<String>): Result {
         val input = clean(rawInput)
-        return input.filter {
-            if (isok(it)) return@filter true
-            (0..it.size).map { i -> it.filterIndexed { index, x -> index != i } }.any { isok(it) }
-        }.count()
-
-    }
-
-    private fun isok(it: List<Int>): Boolean {
-        val progressions =
-            it.subList(0, it.size - 1).mapIndexed { index, i -> it[index + 1] - it[index] }
-        val qllplus = progressions.all { it > 0 && it <= 3 }
-        val allmoins = progressions.all { it < 0 && it >= -3 }
-        return (allmoins || qllplus)
+        return input.count { line -> line.indices.any { i -> isSafeReport(line.removeAt(i)) } }
     }
 
 }
