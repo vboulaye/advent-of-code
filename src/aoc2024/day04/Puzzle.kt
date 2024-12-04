@@ -28,111 +28,78 @@ class Puzzle {
 
     val part1ExpectedResult = 18
 
-    fun horiz(input: List<List<Char>>, x: Int, y: Int): List<Char> {
+
+    fun buildSequence(
+        input: List<List<Char>>,
+        x: Int, y: Int,
+        transformations: List<Pair<Int, Int>>
+    ): List<Char> {
         val height = input.size
         val width = input[0].size
-        val map = XMAS.indices
-            .map { x + it to y }
-            .filter { (x, y) -> x < width && x >= 0 && y < height && y >= 0 }
-            .map { input[it.second][it.first] }
-        return map
+        return transformations
+            .map { (dx, dy) -> x + dx to y + dy }
+            .filter { (nx, ny) ->
+                nx in 0 until width
+                        && ny in 0 until height
+            }
+            .map { (nx, ny) -> input[ny][nx] }
+    }
+
+    fun horiz(input: List<List<Char>>, x: Int, y: Int): List<Char> {
+        return buildSequence(input, x, y, XMAS.indices.map { it to 0 })
     }
 
 
     fun vert(input: List<List<Char>>, x: Int, y: Int): List<Char> {
-        val height = input.size
-        val width = input[0].size
-        val map = XMAS.indices
-            .map { x to y + it }
-            .filter { (x, y) -> x < width && x >= 0 && y < height && y >= 0 }
-            .map { input[it.second][it.first] }
-        return map
+        return buildSequence(input, x, y, XMAS.indices.map { 0 to it })
     }
 
     fun diag1(input: List<List<Char>>, x: Int, y: Int): List<Char> {
-        val height = input.size
-        val width = input[0].size
-        val map = XMAS.indices
-            .map { x + it to y + it }
-            .filter { (x, y) -> x < width && x >= 0 && y < height && y >= 0 }
-            .map { input[it.second][it.first] }
-        return map
+        return buildSequence(input, x, y, XMAS.indices.map { it to it })
     }
 
     fun diag2(input: List<List<Char>>, x: Int, y: Int): List<Char> {
-        val height = input.size
-        val width = input[0].size
-        val map = XMAS.indices
-            .map { x + it to y - it }
-            .filter { (x, y) -> x < width && x >= 0 && y < height && y >= 0 }
-            .map { input[it.second][it.first] }
-        return map
+        return buildSequence(input, x, y, XMAS.indices.map { it to -it })
     }
-//    fun diag3(input: List<List<Char>>, x: Int, y: Int): List<Char> {
-//        val height = input.size
-//        val width = input[0].size
-//        val map = XMAS.indices
-//            .map { x-it to  y+it}
-//            .filter { (x,y) -> x < width && x>=0 && y<height &&y>=0}
-//            .map { input[it.second][it.first] }
-//        return map
-//    }
-//    fun diag4(input: List<List<Char>>, x: Int, y: Int): List<Char> {
-//        val height = input.size
-//        val width = input[0].size
-//        val map = XMAS.indices
-//            .map { x+it to  y-it}
-//            .filter { (x,y) -> x < width && x>=0 && y<height &&y>=0}
-//            .map { input[it.second][it.first] }
-//        return map
-//    }
 
     fun part1(rawInput: List<String>): Result {
         val input = clean(rawInput)
         val height = input.size
         val width = input[0].size
-//        val horiz = input.sumOf { line ->
-//            (0..width - XMAS.length - 1).count() {
-//                line.subList(it, it + XMAS.length) == XMAS.toList()
-//            }
-//        }
-        val totla = (0..height - 1).sumOf { y ->
-            (0..width - 1).sumOf { x ->
-                var count = 0
-                if (isok(horiz(input, x, y))) count++
-                if (isok(vert(input, x, y))) count++
-                if (isok(diag1(input, x, y))) count++
-                if (isok(diag2(input, x, y))) count++
-//                if (isok(diag3(input, x, y))) count++
-//                if (isok(diag4(input, x, y))) count++
-                count
+        val total = (0 until height).sumOf { y ->
+            (0 until width).sumOf { x ->
+                listOf(
+                    horiz(input, x, y),
+                    vert(input, x, y),
+                    diag1(input, x, y),
+                    diag2(input, x, y),
+                )
+                    .count { isXmasString(it) }
             }
 
         }
-        return totla
+        return total
     }
 
-    private fun isok(horiz: List<Char>) = horiz.equals(XMAS_LIST) || horiz.equals(XMAS_LIST_REVERSED)
+    private fun isXmasString(horiz: List<Char>) = horiz == XMAS_LIST || horiz == XMAS_LIST_REVERSED
 
     val part2ExpectedResult = 9
+    fun isBranch(branch: Pair<Char, Char>): Boolean {
+        return (branch.first == 'M' && branch.second == 'S') || (branch.first == 'S' && branch.second == 'M')
+    }
+
     fun part2(rawInput: List<String>): Result {
         val input = clean(rawInput)
         val height = input.size
         val width = input[0].size
 
-        val totla = (1..height - 2).sumOf { y ->
-            (1..width - 2)
+        val totla = (1 until height - 1).sumOf { y ->
+            (1 until width - 1)
                 .count { x ->
                     input[y][x] == 'A'
-                            && (
-                            (input[y - 1][x - 1] == 'M' && input[y + 1][x + 1] == 'S' && input[y - 1][x + 1] == 'M' && input[y + 1][x - 1] == 'S')
-                                    || (input[y - 1][x - 1] == 'M' && input[y + 1][x + 1] == 'S' && input[y - 1][x + 1] == 'S' && input[y + 1][x - 1] == 'M')
-                                    || (input[y - 1][x - 1] == 'S' && input[y + 1][x + 1] == 'M' && input[y - 1][x + 1] == 'S' && input[y + 1][x - 1] == 'M')
-                                    || (input[y - 1][x - 1] == 'S' && input[y + 1][x + 1] == 'M' && input[y - 1][x + 1] == 'M' && input[y + 1][x - 1] == 'S')
-                            )
+                            && isBranch(input[y - 1][x - 1] to input[y + 1][x + 1])
+                            && isBranch(input[y - 1][x + 1] to input[y + 1][x - 1])
                 }
-
-
         }
         return totla
     }
