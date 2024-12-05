@@ -16,17 +16,28 @@ class Puzzle {
         return this
     }
 
-    fun clean(input: List<String>): Pair<List<List<Int>>, List<List<Int>>> {
+    data class Pages(val pageOrders: Map<Int, List<Int>>, val pageUpdates: List<List<Int>>) {
+        val sortedPageUpdates = pageUpdates.map {
+            it.sortedWith({ o1, o2 ->
+                when {
+                    pageOrders[o1]?.contains(o2) == true -> -1
+                    else -> 1
+                }
+            })
+        }
+    }
+
+    fun clean(input: List<String>): Pages {
         val pageOrders = input
-            .filter { line -> line.contains("|") }
+            .filter { line -> "|" in line }
             .map { line -> line.split("|").map { it.toInt() } }
+            .groupBy({ it[0] }, { it[1] })
 
         val pageUpdates = input
-            .filter { line -> line.contains(",") }
+            .filter { line -> "," in line }
             .map { line -> line.split(",").map { it.toInt() } }
 
-
-        return pageOrders to pageUpdates
+        return Pages(pageOrders, pageUpdates)
     }
 
     val part1ExpectedResult = 143
@@ -34,87 +45,25 @@ class Puzzle {
 
         val input = clean(rawInput)
 
-        val index = input.first.groupBy({ it[0] }, { it[1] })
-//        val index2 = index.map { (k, v) -> k to v.min()!! }.toMap()
-        val okUpdates = input.second.filter { pageUpdates ->
-            okUpdate(pageUpdates, index)
-        }
-        return okUpdates.sumOf { it[it.size / 2] }
+        val okUpdates = input.pageUpdates
+            .filterIndexed { i, pageUpdateLine ->
+                pageUpdateLine == input.sortedPageUpdates[i]
+            }
+        return okUpdates.sumOf { getMiddle(it) }
     }
 
-    private fun okUpdate(
-        pageUpdates: List<Int>,
-        index: Map<Int, List<Int>>
-    ) = (0..pageUpdates.size - 2).all { i ->
-        val testVal = pageUpdates[i]
-        index[testVal] != null && pageUpdates.subList(i + 1, pageUpdates.size)
-            .all { index[testVal]!!.contains(it) }
-    }
+    private fun getMiddle(it: List<Int>) = it[it.size / 2]
 
     val part2ExpectedResult = 123
     fun part2(rawInput: List<String>): Result {
 
         val input = clean(rawInput)
 
-        val index = input.first.groupBy({ it[0] }, { it[1] })
-//        val index2 = index.map { (k, v) -> k to v.min()!! }.toMap()
-
-//        val kUpdates = input.second.filter { pageUpdates ->
-//            !okUpdate(pageUpdates, index)
-//        }
-
-        val okUpdates = input.second
-            .filter { pageUpdates ->
-                !okUpdate(pageUpdates, index)
-            }.map { pageUpdates ->
-                val pageUpdates2 = pageUpdates.toMutableList()
-                    .sortedWith(Comparator { o1, o2 ->
-                        if(index[o1]!=null &&   index[o1]!!.contains(o2) ) {
-                            -1
-                        } else {
-                            1
-                        }
-                    })
-//                (0..pageUpdates2.size - 2).filter { i ->
-//                    val testVal = pageUpdates2[i]
-//                    if (index[testVal] == null || !index[testVal]!!.contains(pageUpdates2[i + 1])) {
-//
-//                        val followers = pageUpdates2.subList(i + 1, pageUpdates.size)
-//                        val possibles = followers
-//                            .filter {
-//                                val toMutableList = followers.toMutableList()
-//                                toMutableList.remove(it)
-//                                toMutableList.add(testVal)
-//                                toMutableList.all { mod ->
-//                                    index[it] != null
-//                                            && index[it]!!.contains(mod)
-//                                }
-//                            }
-//                             val indexOfFirst=followers.indexOf(possibles[0])
-////                        if (indexOfFirst != 0) {
-//                        pageUpdates2[i] = pageUpdates2[i + 1 + indexOfFirst]
-//                        pageUpdates2[i + 1 + indexOfFirst] = testVal
-////                        }
-//
-//                    }
-////                if(!(index[testVal] != null && pageUpdates2.subList(i + 1, pageUpdates.size)
-////                    .all { index[testVal]!!.contains(it) })) {
-////                    pageUpdates2[i] = pageUpdates2[i+1]
-////                    pageUpdates2[i+1]=testVal
-////                }
-//                    true
-//                }
-//                6518 high
-
-                (0..pageUpdates2.size - 2).all { i ->
-                    val testVal = pageUpdates2[i]
-                    index[testVal] != null && pageUpdates2.subList(i + 1, pageUpdates2.size)
-                        .all { index[testVal]!!.contains(it) }
-                }
-
-                pageUpdates2
+        return input.sortedPageUpdates
+            .filterIndexed { i, pageUpdateLine ->
+                pageUpdateLine != input.pageUpdates[i]
             }
-        return okUpdates.sumOf { it[it.size / 2] }
+            .sumOf { getMiddle(it)  }
     }
 
 }
