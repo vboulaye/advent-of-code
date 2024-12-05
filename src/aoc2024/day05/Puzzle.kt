@@ -16,24 +16,105 @@ class Puzzle {
         return this
     }
 
-    fun clean(input: List<String>): List<String> {
-        return input
-            .filter { line -> line.acceptInput() }
-            .map { line -> line.parseInput() }
+    fun clean(input: List<String>): Pair<List<List<Int>>, List<List<Int>>> {
+        val pageOrders = input
+            .filter { line -> line.contains("|") }
+            .map { line -> line.split("|").map { it.toInt() } }
+
+        val pageUpdates = input
+            .filter { line -> line.contains(",") }
+            .map { line -> line.split(",").map { it.toInt() } }
+
+
+        return pageOrders to pageUpdates
     }
 
-    val part1ExpectedResult = 0
+    val part1ExpectedResult = 143
     fun part1(rawInput: List<String>): Result {
+
         val input = clean(rawInput)
 
-        return 0
+        val index = input.first.groupBy({ it[0] }, { it[1] })
+//        val index2 = index.map { (k, v) -> k to v.min()!! }.toMap()
+        val okUpdates = input.second.filter { pageUpdates ->
+            okUpdate(pageUpdates, index)
+        }
+        return okUpdates.sumOf { it[it.size / 2] }
     }
 
-    val part2ExpectedResult = 0
+    private fun okUpdate(
+        pageUpdates: List<Int>,
+        index: Map<Int, List<Int>>
+    ) = (0..pageUpdates.size - 2).all { i ->
+        val testVal = pageUpdates[i]
+        index[testVal] != null && pageUpdates.subList(i + 1, pageUpdates.size)
+            .all { index[testVal]!!.contains(it) }
+    }
+
+    val part2ExpectedResult = 123
     fun part2(rawInput: List<String>): Result {
+
         val input = clean(rawInput)
 
-        return 0
+        val index = input.first.groupBy({ it[0] }, { it[1] })
+//        val index2 = index.map { (k, v) -> k to v.min()!! }.toMap()
+
+//        val kUpdates = input.second.filter { pageUpdates ->
+//            !okUpdate(pageUpdates, index)
+//        }
+
+        val okUpdates = input.second
+            .filter { pageUpdates ->
+                !okUpdate(pageUpdates, index)
+            }.map { pageUpdates ->
+                val pageUpdates2 = pageUpdates.toMutableList()
+                    .sortedWith(Comparator { o1, o2 ->
+                        if(index[o1]!=null &&   index[o1]!!.contains(o2) ) {
+                            -1
+                        } else {
+                            1
+                        }
+                    })
+//                (0..pageUpdates2.size - 2).filter { i ->
+//                    val testVal = pageUpdates2[i]
+//                    if (index[testVal] == null || !index[testVal]!!.contains(pageUpdates2[i + 1])) {
+//
+//                        val followers = pageUpdates2.subList(i + 1, pageUpdates.size)
+//                        val possibles = followers
+//                            .filter {
+//                                val toMutableList = followers.toMutableList()
+//                                toMutableList.remove(it)
+//                                toMutableList.add(testVal)
+//                                toMutableList.all { mod ->
+//                                    index[it] != null
+//                                            && index[it]!!.contains(mod)
+//                                }
+//                            }
+//                             val indexOfFirst=followers.indexOf(possibles[0])
+////                        if (indexOfFirst != 0) {
+//                        pageUpdates2[i] = pageUpdates2[i + 1 + indexOfFirst]
+//                        pageUpdates2[i + 1 + indexOfFirst] = testVal
+////                        }
+//
+//                    }
+////                if(!(index[testVal] != null && pageUpdates2.subList(i + 1, pageUpdates.size)
+////                    .all { index[testVal]!!.contains(it) })) {
+////                    pageUpdates2[i] = pageUpdates2[i+1]
+////                    pageUpdates2[i+1]=testVal
+////                }
+//                    true
+//                }
+//                6518 high
+
+                (0..pageUpdates2.size - 2).all { i ->
+                    val testVal = pageUpdates2[i]
+                    index[testVal] != null && pageUpdates2.subList(i + 1, pageUpdates2.size)
+                        .all { index[testVal]!!.contains(it) }
+                }
+
+                pageUpdates2
+            }
+        return okUpdates.sumOf { it[it.size / 2] }
     }
 
 }
