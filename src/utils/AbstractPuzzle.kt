@@ -8,6 +8,8 @@ abstract class AbstractPuzzle {
     abstract fun part1(input: List<String>): Long
     abstract fun part2(input: List<String>): Long
 
+    var insidePart: Int = 1
+
     @Target(
         AnnotationTarget.FUNCTION,
     )
@@ -25,26 +27,27 @@ abstract class AbstractPuzzle {
         val input = readInput("zzdata", this::class)
 
 
-        fun runPart(part: String, expectedTestResult: Long, partEvaluator: (List<String>) -> Long) {
+        fun runPart(part: Int, expectedTestResult: Long, partEvaluator: (List<String>) -> Long) {
+            insidePart = part
             val testDuration = measureTime {
                 val testResult = partEvaluator(testInput)
                 check(testResult == expectedTestResult)
-                println("test ${part}: $testResult == ${expectedTestResult}")
+                println("test part ${insidePart}: $testResult == ${expectedTestResult}")
             }
             val fullDuration = measureTime {
                 val fullResult = partEvaluator(input)
-                println("${part}: $fullResult")
+                println("part ${insidePart}: $fullResult")
             }
-            println("${part}: test took ${testDuration.inWholeMilliseconds}ms, full took ${fullDuration.inWholeMilliseconds}ms")
+            println("part ${insidePart}: test took ${testDuration.inWholeMilliseconds}ms, full took ${fullDuration.inWholeMilliseconds}ms")
         }
 
         runPart(
-            "part1",
+            1,
             parseLambdaForTestResult(puzzle::part1),
             puzzle::part1
         )
         runPart(
-            "part2",
+            2,
             parseLambdaForTestResult(puzzle::part2),
             puzzle::part2
         )

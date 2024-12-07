@@ -1,7 +1,7 @@
 package aoc2024.day07
 
 import utils.readInput
-import utils.removeFirst
+import utils.subListToEnd
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -13,12 +13,16 @@ class Puzzle {
 
     fun String.acceptInput() = true
 
-    fun String.parseInput(): Pair<Long, List<Long>> {
+    data class Equation(val result: Long, val terms: List<Long>)
+
+    fun String.parseInput(): Equation {
         val split: List<String> = this.split(": ")
-        return split[0].toLong() to split[1].split(' ').map { it.toLong() }
+        val result = split[0].toLong()
+        val terms = split[1].split(' ').map { it.toLong() }
+        return Equation(result, terms)
     }
 
-    fun clean(input: List<String>): List<Pair<Long, List<Long>>> {
+    fun clean(input: List<String>): List<Equation> {
         return input
             .filter { line -> line.acceptInput() }
             .map { line -> line.parseInput() }
@@ -27,85 +31,40 @@ class Puzzle {
     val part1ExpectedResult = 3749L
     fun part1(rawInput: List<String>): Result {
         val input = clean(rawInput)
-
-        return input.filter { equation ->
-            val (result, terms) = equation
-
-            hasMatch(terms to mutableListOf<Char>(), result, terms)
-
-        }.sumOf {
-            it.first
-        }
+        return input.filter { equation -> hasMatch(equation, listOf()) }.sumOf { it.result }
     }
 
-    private fun hasMatch(terms: Pair<List<Long>, List<Char>>, result: Long, terms1: List<Long>): Boolean {
-        if (testWith('*', terms, result, terms1)) return true
-        if (testWith('+', terms, result, terms1)) return true
+    private fun hasMatch(equation: Equation, operators: List<Char>): Boolean {
+        if (testWith('*', equation, operators)) return true
+        if (testWith('+', equation, operators)) return true
         if (part == 2) {
-            if (testWith('|', terms, result, terms1)) return true
-
-//            if (result.toString().startsWith(terms.first[0].toString())) {
-//                val newTerms = terms.first.removeFirst()
-//                val toMutableList = terms.second.toMutableList()
-//                toMutableList.add('|')
-//                val newr = result.toString().removePrefix(terms.first[0].toString()).toLong()
-//                if (newTerms.size >= 2 && hasMatch(newTerms to toMutableList, newr, terms1)) {
-//                    return true
-//                } else {
-//                    if (newTerms[0] == newr) return true
-//                }
-//            }
-
-//            val p2 = terms.first.indices.any {
-//
-//                val r = terms.first.subList(0, it).joinToString("") + terms.first.subList(it, terms.first.size)
-//                    .joinToString("")
-//                r.toLong() == result
-//            }
-//            if (p2) return true
-//            val newTerms = terms.first.removeFirst()
-//            val toMutableList = terms.second.toMutableList()
-//            toMutableList.add('|')
-//            if (newTerms.size>=2 && hasMatch(newTerms to listOf(), result, terms1)) {
-//                return true
-//            } else {
-//                if(newTerms[0]==result) return true
-//            }
-//            val newTerms2 = terms1.subList(0, terms.second.size+1)
-//            if (newTerms2.size>=2 && hasMatch(newTerms2 to listOf(), result, terms1)) {
-//                return true
-//            } else {
-//                if(newTerms2[0]==result) return true
-//            }
+            if (testWith('|', equation, operators)) return true
         }
         return false
-
     }
 
     var part = 1
-    private fun testWith(c: Char, terms: Pair<List<Long>, List<Char>>, result: Long, terms1: List<Long>): Boolean {
-        val head = terms.first[0]
-        val head2 = terms.first[1]
-        val atEnd = terms.first.size == 2
+    private fun testWith(operator: Char, equation: Equation, operators: List<Char>): Boolean {
+        val (result, terms) = equation
+        val atEnd = terms.size == 2
 
+        val firstTerm = equation.terms[0]
+        val nextTerm = equation.terms[1]
 
-        val withAdd = when (c) {
-            '+' -> head + head2
-            '*' -> head * head2
-            '|' -> (head.toString() + head2.toString()).toLong()
-            else -> error("unknown operator $c")
+        val newValue = when (operator) {
+            '+' -> firstTerm + nextTerm
+            '*' -> firstTerm * nextTerm
+            '|' -> (firstTerm.toString() + nextTerm.toString()).toLong()
+            else -> error("unknown operator $operator")
         }
-        if (atEnd) return withAdd == result
-        // if (withAdd >= result) return false
-        val newOperators = terms.second.toMutableList()
-        newOperators.add(c)
-        val newTerms = terms.first
-            .subList(2, terms.first.size)
-            .toMutableList()
-        newTerms.add(0, withAdd)
-        if (hasMatch(newTerms to newOperators, result, terms1)) return true
+        if (atEnd) {
+            return newValue == result
+        }
 
-        return false
+        val newOperators = operators + operators
+        val newTerms = listOf(newValue) + equation.terms.subListToEnd(2)
+
+        return hasMatch(Equation(result, newTerms), newOperators)
     }
 
     val part2ExpectedResult = 11387L
@@ -113,12 +72,7 @@ class Puzzle {
         val input = clean(rawInput)
 
         part = 2
-        return input.filter { equation ->
-            val (result, terms) = equation
-
-            hasMatch(terms to mutableListOf<Char>(), result, terms)
-
-        }.sumOf { it.first }
+        return input.filter { equation -> hasMatch(equation, listOf()) }.sumOf { it.result }
     }
 
 }

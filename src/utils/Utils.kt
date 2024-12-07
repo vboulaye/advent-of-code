@@ -40,6 +40,7 @@ fun <T : Comparable<T>> Iterable<T>.max(): T = this.maxOrNull()!!
 
 fun <E> List<E>.removeFirst() = this.subList(1, this.size)
 fun <E> List<E>.removeLast() = this.subList(0, this.size - 1)
+fun <E> List<E>.subListToEnd(fromIndex: Int) = this.subList(fromIndex, this.size)
 fun <E> List<E>.removeAt(index: Int) = this.filterIndexed { i, _ -> i != index }
 
 fun main() {
