@@ -1,5 +1,6 @@
 package aoc2024.day08
 
+import utils.Point
 import utils.readInput
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -12,28 +13,94 @@ class Puzzle {
 
     fun String.acceptInput() = true
 
-    fun String.parseInput(): String {
-        return this
+    fun String.parseInput(): List<Char> {
+        return this.toList()
     }
 
-    fun clean(input: List<String>): List<String> {
+    fun clean(input: List<String>): List<List<Char>> {
         return input
             .filter { line -> line.acceptInput() }
             .map { line -> line.parseInput() }
     }
 
-    val part1ExpectedResult = 0
+    val part1ExpectedResult = 14
     fun part1(rawInput: List<String>): Result {
         val input = clean(rawInput)
+        val antennaPositions: Map<Char, List<Point>> = input.indices.flatMap { y ->
+            input[y].indices.map { x ->
+                input[y][x] to Point(x, y)
+            }
+        }
+            .filter { it.first != '.' }
+            .groupBy({ it.first }, { it.second })
+        val antinodes = antennaPositions
+            .flatMap { (antenna, positions) ->
+                positions.flatMap { sourceAntenna ->
+                    positions
+                        .filter { it != sourceAntenna }
+                        .flatMap {
+                            val vector = it - sourceAntenna
+                            listOf(sourceAntenna - vector, it + vector)
+                                .filter { it.y in input.indices && it.x in input[0].indices }
+                        }
 
-        return 0
+                }
+            }
+            .distinct()
+//         input.indices.forEach { y ->
+//            input[y].indices.forEach { x ->
+//                if(Point(x, y) in antinodes) print('#') else print('.')
+//            }
+//             println()
+//        }
+        return antinodes
+            .count()
     }
 
-    val part2ExpectedResult = 0
+    val part2ExpectedResult = 34
     fun part2(rawInput: List<String>): Result {
         val input = clean(rawInput)
+        val antennaPositions: Map<Char, List<Point>> = input.indices.flatMap { y ->
+            input[y].indices.map { x ->
+                input[y][x] to Point(x, y)
+            }
+        }
+            .filter { it.first != '.' }
+            .groupBy({ it.first }, { it.second })
+        val antinodes = antennaPositions
+            .flatMap { (antenna, positions) ->
+                positions.flatMap { sourceAntenna ->
+                    positions
+                        .filter { it != sourceAntenna }
+                        .flatMap {
+                            val vector = it - sourceAntenna
+                            val a = mutableListOf<Point>()
+                            var node = sourceAntenna
+                            while (node.y in input.indices && node.x in input[0].indices) {
+                                a.add(node)
+                                node -= vector
+                            }
+                            node = it
+                            while (node.y in input.indices && node.x in input[0].indices) {
+                                a.add(node)
+                                node += vector
+                            }
+                            a
+                        }
+                        .distinct()
 
-        return 0
+                }
+                    .distinct()
+            }
+            .distinct()
+//         input.indices.forEach { y ->
+//            input[y].indices.forEach { x ->
+//                if(Point(x, y) in antinodes) print('#') else print('.')
+//            }
+//             println()
+//        }
+        return antinodes
+            .count()
     }
 
 }
