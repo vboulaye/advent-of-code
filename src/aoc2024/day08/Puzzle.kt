@@ -1,6 +1,8 @@
 package aoc2024.day08
 
 import utils.Point
+import utils.browsePoints
+import utils.containsPoint
 import utils.readInput
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -26,14 +28,9 @@ class Puzzle {
     val part1ExpectedResult = 14
     fun part1(rawInput: List<String>): Result {
         val input = clean(rawInput)
-        val antennaPositions: Map<Char, List<Point>> = input.indices.flatMap { y ->
-            input[y].indices.map { x ->
-                input[y][x] to Point(x, y)
-            }
-        }
-            .filter { it.first != '.' }
-            .groupBy({ it.first }, { it.second })
-        val antinodes = antennaPositions
+        val antennaPositions = getAntennaPositions(input)
+
+        return antennaPositions
             .flatMap { (antenna, positions) ->
                 positions.flatMap { sourceAntenna ->
                     positions
@@ -41,51 +38,48 @@ class Puzzle {
                         .flatMap {
                             val vector = it - sourceAntenna
                             listOf(sourceAntenna - vector, it + vector)
-                                .filter { it.y in input.indices && it.x in input[0].indices }
+                                .filter { input.containsPoint(it) }
                         }
 
                 }
             }
             .distinct()
-//         input.indices.forEach { y ->
-//            input[y].indices.forEach { x ->
-//                if(Point(x, y) in antinodes) print('#') else print('.')
-//            }
-//             println()
-//        }
-        return antinodes
             .count()
     }
+
+    private fun getAntennaPositions(input: List<List<Char>>) = input.browsePoints()
+        .filter { it.second != '.' }
+        .groupBy({ it.second }, { it.first })
 
     val part2ExpectedResult = 34
     fun part2(rawInput: List<String>): Result {
         val input = clean(rawInput)
-        val antennaPositions: Map<Char, List<Point>> = input.indices.flatMap { y ->
-            input[y].indices.map { x ->
-                input[y][x] to Point(x, y)
-            }
-        }
-            .filter { it.first != '.' }
-            .groupBy({ it.first }, { it.second })
+        val antennaPositions = getAntennaPositions(input)
+
         val antinodes = antennaPositions
             .flatMap { (antenna, positions) ->
                 positions.flatMap { sourceAntenna ->
                     positions
                         .filter { it != sourceAntenna }
-                        .flatMap {
-                            val vector = it - sourceAntenna
-                            val a = mutableListOf<Point>()
-                            var node = sourceAntenna
-                            while (node.y in input.indices && node.x in input[0].indices) {
-                                a.add(node)
-                                node -= vector
-                            }
-                            node = it
-                            while (node.y in input.indices && node.x in input[0].indices) {
-                                a.add(node)
-                                node += vector
-                            }
-                            a
+                        .flatMap { targetAntenna ->
+                            val vector = targetAntenna - sourceAntenna
+//                            val newAntinodes = mutableListOf<Point>()
+//                            var node = sourceAntenna
+//                            while (node.y in input.indices && node.x in input[0].indices) {
+//                                newAntinodes.add(node)
+//                                node -= vector
+//                            }
+//                            node = targetAntenna
+//                            while (node.y in input.indices && node.x in input[0].indices) {
+//                                newAntinodes.add(node)
+//                                node += vector
+//                            }
+//                            newAntinodes
+
+                            generateSequence(sourceAntenna) { it - vector }
+                                .takeWhile { input.containsPoint(it) } +
+                                    generateSequence(targetAntenna + vector) { it + vector }
+                                        .takeWhile { input.containsPoint(it) }
                         }
                         .distinct()
 
@@ -93,12 +87,6 @@ class Puzzle {
                     .distinct()
             }
             .distinct()
-//         input.indices.forEach { y ->
-//            input[y].indices.forEach { x ->
-//                if(Point(x, y) in antinodes) print('#') else print('.')
-//            }
-//             println()
-//        }
         return antinodes
             .count()
     }

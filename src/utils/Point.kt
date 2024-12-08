@@ -2,7 +2,7 @@ package utils
 
 import java.io.Serializable
 
-data class Point(val x: Int, val y: Int) :Serializable{
+data class Point(val x: Int, val y: Int) : Serializable {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -42,3 +42,26 @@ data class Point(val x: Int, val y: Int) :Serializable{
     }
 
 }
+
+fun <E> List<List<E>>.containsPoint(it: Point): Boolean {
+    return this.indices.contains(it.y)
+            && it.x in this[0].indices
+}
+
+fun <E> List<List<E>>.getPoint(it: Point, default: E? = null): E {
+    if (!this.containsPoint(it)) {
+        if (default != null) return default
+        throw IllegalStateException("point $it is out of bounds")
+    }
+    return this[it.y][it.x]
+}
+
+fun <E> List<List<E>>.browsePoints(): List<Pair<Point,E>> {
+    return this.indices
+        .flatMap { y ->
+            this[y].indices.map { x ->
+                Point(x, y) to this[y][x]
+            }
+        }
+}
+
