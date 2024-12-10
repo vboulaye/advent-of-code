@@ -1,5 +1,8 @@
 package aoc2024.day10
 
+import utils.Point
+import utils.containsPoint
+import utils.getPoint
 import utils.readInput
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -12,28 +15,66 @@ class Puzzle {
 
     fun String.acceptInput() = true
 
-    fun String.parseInput(): String {
-        return this
+    fun String.parseInput(): List<Int> {
+        return this.toList()
+            .map { it.code - '0'.code }
     }
 
-    fun clean(input: List<String>): List<String> {
+    fun clean(input: List<String>): List<List<Int>> {
         return input
             .filter { line -> line.acceptInput() }
             .map { line -> line.parseInput() }
     }
 
-    val part1ExpectedResult = 0
+    val part1ExpectedResult = 36
     fun part1(rawInput: List<String>): Result {
         val input = clean(rawInput)
+        return input.indices.flatMap { y ->
+            input[y].indices.flatMap { x ->
+                val value = input[y][x]
+                if (value != 0) {
+                    listOf()
+                } else {
+                    val paths = mutableSetOf<Point>()
+                    buildPaths(Point(x, y), input, paths)
+                    paths
+                }
+            }
+        }.count()
 
-        return 0
     }
 
-    val part2ExpectedResult = 0
+    private fun buildPaths(point: Point, input: List<List<Int>>, paths: MutableCollection<Point>) {
+        val value = input.getPoint(point)
+        point.neighbours()
+            .filter { neighbour ->
+                input.containsPoint(neighbour)
+                        && input.getPoint(neighbour) == value + 1
+            }
+            .forEach { neighbour ->
+                if (input.getPoint(neighbour)  == 9) {
+                    paths.add( neighbour)
+                } else {
+                    buildPaths(neighbour, input, paths)
+                }
+            }
+    }
+
+    val part2ExpectedResult = 81
     fun part2(rawInput: List<String>): Result {
         val input = clean(rawInput)
-
-        return 0
+        return input.indices.flatMap { y ->
+            input[y].indices.flatMap { x ->
+                val value = input[y][x]
+                if (value != 0) {
+                    listOf()
+                } else {
+                    val paths = mutableListOf<Point>()
+                    buildPaths(Point(x, y), input, paths)
+                    paths
+                }
+            }
+        }.count()
     }
 
 }

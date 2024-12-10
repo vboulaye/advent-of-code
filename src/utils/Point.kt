@@ -41,6 +41,15 @@ data class Point(val x: Int, val y: Int) : Serializable {
         return Point(-x, -y)
     }
 
+    fun neighbours(): List<Point> {
+    return    listOf(
+            this+Point(0,1),
+            this+Point(0,-1),
+            this+Point(1,0),
+            this+Point(-1,0),
+            )
+    }
+
 }
 
 fun <E> List<List<E>>.containsPoint(it: Point): Boolean {
