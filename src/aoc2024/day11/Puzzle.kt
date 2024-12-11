@@ -25,52 +25,41 @@ class Puzzle {
     val part1ExpectedResult = 55312L
     fun part1(rawInput: List<String>): Result {
         val input = clean(rawInput)
-        var line = input[0]
-        return line.sumOf { n ->
-            countIteraitons(n, 25)
-        }
-//        (1..25).forEach { i ->
-//            line = line.flatMap { n ->
-//                when {
-//                    n == 0L -> listOf(1L)
-//                    n.toString().length % 2L == 0L -> listOf(
-//                        n.toString().substring(0, n.toString().length / 2).toLong(),
-//                        n.toString().substring(n.toString().length / 2).toLong(),
-//                    )
-//
-//                    else -> listOf(n * 2024L)
-//                }
-//            }
-//        }
-//        return line.sumOf { 1L }
+        val line = input[0]
+        return line.sumOf { countAfterIterations(it, 25) }
     }
 
     val cache = mutableMapOf<Pair<Long, Int>, Long>()
 
-    private fun countIteraitons(n: Long, i: Int): Long {
-
+    private fun countAfterIterations(n: Long, i: Int): Long {
         if (i == 0) return 1L
-        if (cache.containsKey(n to i)) return cache[n to i]!!
-        val ret = when {
-            n == 0L -> countIteraitons(1L, i - 1)
-            n.toString().length % 2L == 0L ->
-                countIteraitons(n.toString().substring(0, n.toString().length / 2).toLong(), i - 1) +
-                        countIteraitons(n.toString().substring(n.toString().length / 2).toLong(), i - 1)
+        cache[n to i]?.let { return it }
+        val remaininingIterations = i - 1
+        val numberAsString = n.toString()
+        val countAtEnd = when {
+            n == 0L -> countAfterIterations(1L, remaininingIterations)
 
-            else -> countIteraitons(n * 2024L, i - 1)
+            numberAsString.length % 2L == 0L ->
+                countAfterIterations(
+                    numberAsString.substring(0, numberAsString.length / 2).toLong(),
+                    remaininingIterations
+                ) +
+                        countAfterIterations(
+                            numberAsString.substring(numberAsString.length / 2).toLong(),
+                            remaininingIterations
+                        )
+
+            else -> countAfterIterations(n * 2024L, remaininingIterations)
         }
-        cache.put(n to i, ret)
-        return ret
+        return countAtEnd.also { cache[n to i] = it }
     }
 
     val part2ExpectedResult = 0L
     fun part2(rawInput: List<String>): Result {
         val input = clean(rawInput)
-        var line = input[0]
+        val line = input[0]
         if (line.size == 2) return 0L
-        return line.sumOf { n ->
-            countIteraitons(n, 75)
-        }
+        return line.sumOf { n -> countAfterIterations(n, 75) }
     }
 
 }
