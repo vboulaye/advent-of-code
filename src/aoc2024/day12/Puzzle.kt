@@ -4,6 +4,7 @@ import utils.Point
 import utils.browsePoints
 import utils.getPoint
 import utils.readInput
+import kotlin.math.abs
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -81,7 +82,7 @@ class Puzzle {
         val input = clean(rawInput)
         val seen = mutableSetOf<Point>()
         val areaPerimeter = mutableMapOf<Point, Pair<Int, Int>>()
-        val aretoToPerimeter = input.browsePoints()
+        val areas = input.browsePoints()
             .filter { (p, v) -> !(p in seen) }
             .mapNotNull { (p, v) ->
                 if (!(p in seen)) {
@@ -94,7 +95,8 @@ class Puzzle {
                 } else {
                     null
                 }
-            }.sumOf { areaPoints ->
+            }
+        val aretoToPerimeter = areas.sumOf { areaPoints ->
 //                val distinct = areaPoints
 //                    .flatMap { p ->
 //                        p.neighbours()
@@ -128,12 +130,13 @@ class Puzzle {
                                 p to it
                             }
                     }
+                    .distinct()
                     .toMutableList()
                 var i = 0
                 while (i < distinct.size) {
                     val (from, to) = distinct[i]
                     val seen1 = mutableSetOf<Pair<Point, Point>>()
-                    val other = getStraightLine(distinct[i], distinct, seen1)
+                    val other = getStraightLine(distinct[i], distinct, seen1, areas)
                         .toMutableList()
 //                    other.remove(distinct[i])
 //                    distinct.removeAll(other)
@@ -145,25 +148,31 @@ class Puzzle {
                 val perimeter = distinct
                     .count()
 
-                println(areaPoints.size.toString() + '*' + perimeter)
+                println( input.getPoint( areaPoints[0]).toString() +" =>" + areaPoints.size.toString() + '*' + perimeter)
                 areaPoints.size * perimeter
             }
-
         return aretoToPerimeter
     }
 
     private fun getStraightLine(
         pair: Pair<Point, Point>,
         distinct: MutableList<Pair<Point, Point>>,
-        seen: MutableSet<Pair<Point, Point>>
+        seen: MutableSet<Pair<Point, Point>>,
+        areas: List<List<Point>>
     ): List<Pair<Point, Point>> {
         val direction = pair.second - pair.first
+        val firstArea = areas.find { it.contains(pair.first) }
+        val secondArea = areas.find { it.contains(pair.second) }
 
         val serializable = when {
             direction.y == 0 -> distinct
                 .filter {
                     val direction2 = it.second - it.first
-                    val b = !(it in seen) && direction2.y == 0 && (
+                    val b = !(it in seen) && direction2.y == 0
+                            && (abs(it.second.y - pair.second.y)==1 )
+                            && direction==direction2
+                           // && (isInSimilarAreas(it, firstArea, secondArea, areas))
+                            && (
                             (it.second.x == pair.second.x && it.first.x == pair.first.x)
                                     || (it.second.x == pair.first.x && it.first.x == pair.second.x)
                             )
@@ -171,25 +180,43 @@ class Puzzle {
                 }
                 .flatMap {
                     seen.add(it)
-                    listOf(it) + getStraightLine(it, distinct, seen)
+                    listOf(it) + getStraightLine(it, distinct, seen, areas)
                 }
 
             direction.x == 0 -> distinct
                 .filter {
                     val direction2 = it.second - it.first
-                    !(it in seen) && direction2.x == 0 && (
+                    !(it in seen) && direction2.x == 0
+                            && direction==direction2
+                            //&& (isInSimilarAreas(it, firstArea, secondArea, areas))
+                            && (abs(it.second.x - pair.second.x)==1 )
+                            && (
                             (it.second.y == pair.second.y && it.first.y == pair.first.y)
                                     || (it.second.y == pair.first.y && it.first.y == pair.second.y)
                             )
                 }
                 .flatMap {
                     seen.add(it)
-                    listOf(it) + getStraightLine(it, distinct, seen)
+                    listOf(it) + getStraightLine(it, distinct, seen, areas)
                 }
 
             else -> throw Error("unexpected direction $direction")
         }
         return serializable
+    }
+
+    private fun isInSimilarAreas(
+        p: Pair<Point, Point>,
+        firstArea: List<Point>?,
+        secondArea: List<Point>?,
+        areas: List<List<Point>>
+    ): Boolean {
+        val firstArea2 = areas.find { it.contains(p.first) }
+        val secondArea2 = areas.find { it.contains(p.second) }
+
+      return   (firstArea==firstArea2 && secondArea==secondArea2)
+                || (firstArea==secondArea2 && secondArea==firstArea2)
+
     }
 
 }
