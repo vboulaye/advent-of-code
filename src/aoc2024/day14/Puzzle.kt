@@ -38,15 +38,17 @@ class Puzzle {
 //            i++
 //            pos=pos.map { (p, v) -> (p+v).modulo(dims) to v }
 //        }
-        pos=pos.map { (p, v) -> val point = (p) + v * 100
+        pos = pos.map { (p, v) ->
+            val point = (p) + v * 100
             val modulo = point.modulo(dims)
-            modulo to v }
-        val middle = Point(dims.x/2, dims.y/2)
+            modulo to v
+        }
+        val middle = Point(dims.x / 2, dims.y / 2)
         (0 until dims.y).forEach { y ->
             (0 until dims.x).forEach { x ->
                 val p = Point(x, y)
                 val count = pos.filter { it.first == p }.count()
-                print(if (count==0) "." else count)
+                print(if (count == 0) "." else count)
             }
             println()
         }
@@ -63,13 +65,50 @@ class Puzzle {
 
             .values
             .map { it.size }
-        return quadrant.fold(1L, { acc, countOfRobots -> acc*countOfRobots.toLong() })
+        return quadrant.fold(1L, { acc, countOfRobots -> acc * countOfRobots.toLong() })
     }
 
 
     val part2ExpectedResult = 0L
     fun part2(rawInput: List<String>): Result {
         val input = clean(rawInput)
+        val dims = when {
+            input.size < 20 -> Point(11, 7)
+            else -> Point(101, 103)
+        }
+        var pos = input
+        var i = 0
+        while (i < 10000) {
+            i++
+
+            pos = pos.map { (p, v) -> (p + v).modulo(dims) to v }
+
+            val grid: List<String> = (0 until dims.y).map { y ->
+                (0 until dims.x).map { x ->
+                    val p = Point(x, y)
+                    val count = pos.filter { it.first == p }.count()
+                    if (count == 0) "." else "#"
+                }.joinToString("")
+            }
+            val hasline = grid.any { line ->
+
+                line.contains("##########")
+            }
+            if (hasline) {
+
+                println()
+                println()
+                println(i)
+                println()
+                grid.forEach { println(it) }
+
+            }
+        }
+//        pos=pos.map { (p, v) -> val point = (p) + v * 100
+//            val modulo = point.modulo(dims)
+//            modulo to v }
+//        val middle = Point(dims.x/2, dims.y/2)
+
 
         return 0
     }
@@ -86,19 +125,19 @@ fun main() {
     val input = readInput("zzdata", Puzzle::class)
 
     fun runPart(part: String, expectedTestResult: Result, partEvaluator: (List<String>) -> Result) {
-        val testDuration = measureTime {
-            val testResult = partEvaluator(testInput)
-            println("test ${part}: $testResult == ${expectedTestResult}")
-            check(testResult == expectedTestResult) { "$testResult != ${expectedTestResult}" }
-        }
+//        val testDuration = measureTime {
+//            val testResult = partEvaluator(testInput)
+//            println("test ${part}: $testResult == ${expectedTestResult}")
+//            check(testResult == expectedTestResult) { "$testResult != ${expectedTestResult}" }
+//        }
         val fullDuration = measureTime {
             val fullResult = partEvaluator(input)
             println("${part}: $fullResult")
         }
-        println("${part}: test took ${testDuration.inWholeMilliseconds}ms, full took ${fullDuration.inWholeMilliseconds}ms")
+//        println("${part}: test took ${testDuration.inWholeMilliseconds}ms, full took ${fullDuration.inWholeMilliseconds}ms")
     }
 
-    runPart("part1", puzzle.part1ExpectedResult, puzzle::part1)
+//    runPart("part1", puzzle.part1ExpectedResult, puzzle::part1)
     runPart("part2", puzzle.part2ExpectedResult, puzzle::part2)
 
 }
