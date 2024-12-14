@@ -50,6 +50,10 @@ data class Point(val x: Int, val y: Int) : Serializable {
             )
     }
 
+    fun modulo(dims: Point): Point {
+        return Point(x.mod(dims.x), y.mod(dims.y))
+    }
+
 }
 
 fun <E> List<List<E>>.containsPoint(it: Point): Boolean {
