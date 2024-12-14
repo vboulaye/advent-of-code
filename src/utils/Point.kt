@@ -54,6 +54,10 @@ data class Point(val x: Int, val y: Int) : Serializable {
         return Point(x.mod(dims.x), y.mod(dims.y))
     }
 
+    operator fun div(i: Int): Point {
+        return Point(x / i, y / i)
+    }
+
 }
 
 fun <E> List<List<E>>.containsPoint(it: Point): Boolean {

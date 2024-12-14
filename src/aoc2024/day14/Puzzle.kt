@@ -33,25 +33,16 @@ class Puzzle {
             else -> Point(101, 103)
         }
         var pos = input
-//        var i = 0
-//        while (i < 100) {
-//            i++
-//            pos=pos.map { (p, v) -> (p+v).modulo(dims) to v }
+        pos = pos.map { (p, v) -> ((p) + v * 100).modulo(dims) to v }
+        val middle = Point(dims.x, dims.y) / 2
+//        (0 until dims.y).forEach { y ->
+//            (0 until dims.x).forEach { x ->
+//                val p = Point(x, y)
+//                val count = pos.filter { it.first == p }.count()
+//                print(if (count == 0) "." else count)
+//            }
+//            println()
 //        }
-        pos = pos.map { (p, v) ->
-            val point = (p) + v * 100
-            val modulo = point.modulo(dims)
-            modulo to v
-        }
-        val middle = Point(dims.x / 2, dims.y / 2)
-        (0 until dims.y).forEach { y ->
-            (0 until dims.x).forEach { x ->
-                val p = Point(x, y)
-                val count = pos.filter { it.first == p }.count()
-                print(if (count == 0) "." else count)
-            }
-            println()
-        }
         val mapNotNull = pos.mapNotNull { (p, v) ->
             when {
                 p.x < middle.x && p.y < middle.y -> "NW" to p
@@ -61,11 +52,10 @@ class Puzzle {
                 else -> null
             }
         }.groupBy { it.first }
-        val quadrant = mapNotNull
-
+        val quadrantSizes = mapNotNull
             .values
             .map { it.size }
-        return quadrant.fold(1L, { acc, countOfRobots -> acc * countOfRobots.toLong() })
+        return quadrantSizes.fold(1L, { acc, countOfRobots -> acc * countOfRobots.toLong() })
     }
 
 
@@ -78,37 +68,44 @@ class Puzzle {
         }
         var pos = input
         var i = 0
+        var star=System.currentTimeMillis()
         while (i < 10000) {
             i++
 
+            if(i%100==0) {
+                println(i.toString() +" => "+(System.currentTimeMillis()-star)*100/i)
+            }
             pos = pos.map { (p, v) -> (p + v).modulo(dims) to v }
+            val grid = Array(dims.y) { CharArray(dims.x) { '.' } }
+            pos.forEach { (p, _) -> grid[p.y][p.x] = '#' }
 
-            val grid: List<String> = (0 until dims.y).map { y ->
-                (0 until dims.x).map { x ->
-                    val p = Point(x, y)
-                    val count = pos.filter { it.first == p }.count()
-                    if (count == 0) "." else "#"
-                }.joinToString("")
+            if (grid.any { row -> row.joinToString("").contains("##########") }) {
+                println("\n\n$i\n")
+                grid.forEach { println(it.joinToString("")) }
+                return 0
             }
-            val hasline = grid.any { line ->
-
-                line.contains("##########")
-            }
-            if (hasline) {
-
-                println()
-                println()
-                println(i)
-                println()
-                grid.forEach { println(it) }
-
-            }
+//            val grid: List<String> = (0 until dims.y).map { y ->
+//                (0 until dims.x).map { x ->
+//                    val p = Point(x, y)
+//                    val count = pos.filter { it.first == p }.count()
+//                    if (count == 0) "." else "#"
+//                }.joinToString("")
+//            }
+//            val hasline = grid.any { line ->
+//                line.contains("##########")
+//            }
+//            if (hasline) {
+//
+//                println()
+//                println()
+//                println(i)
+//                println()
+//                grid.forEach { println(it) }
+//
+//                return 0
+//
+//            }
         }
-//        pos=pos.map { (p, v) -> val point = (p) + v * 100
-//            val modulo = point.modulo(dims)
-//            modulo to v }
-//        val middle = Point(dims.x/2, dims.y/2)
-
 
         return 0
     }
@@ -134,10 +131,10 @@ fun main() {
             val fullResult = partEvaluator(input)
             println("${part}: $fullResult")
         }
-//        println("${part}: test took ${testDuration.inWholeMilliseconds}ms, full took ${fullDuration.inWholeMilliseconds}ms")
+        println("${part}:  full took ${fullDuration.inWholeMilliseconds}ms")
     }
 
-//    runPart("part1", puzzle.part1ExpectedResult, puzzle::part1)
+    runPart("part1", puzzle.part1ExpectedResult, puzzle::part1)
     runPart("part2", puzzle.part2ExpectedResult, puzzle::part2)
 
 }
