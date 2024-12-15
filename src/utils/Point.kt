@@ -73,6 +73,13 @@ fun <E> List<List<E>>.getPoint(it: Point, default: E? = null): E {
     return this[it.y][it.x]
 }
 
+fun <E> List<MutableList<E>>.setPoint(it: Point, value: E): Unit{
+    if (!this.containsPoint(it)) {
+        throw IllegalStateException("point $it is out of bounds")
+    }
+     this[it.y][it.x] =value
+}
+
 fun <E> List<List<E>>.browsePoints(): List<Pair<Point,E>> {
     return this.indices
         .flatMap { y ->
