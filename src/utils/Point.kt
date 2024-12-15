@@ -42,12 +42,12 @@ data class Point(val x: Int, val y: Int) : Serializable {
     }
 
     fun neighbours(): List<Point> {
-    return    listOf(
-            this+Point(0,1),
-            this+Point(0,-1),
-            this+Point(1,0),
-            this+Point(-1,0),
-            )
+        return listOf(
+            this + Point(0, 1),
+            this + Point(0, -1),
+            this + Point(1, 0),
+            this + Point(-1, 0),
+        )
     }
 
     fun modulo(dims: Point): Point {
@@ -58,6 +58,13 @@ data class Point(val x: Int, val y: Int) : Serializable {
         return Point(x / i, y / i)
     }
 
+    fun move(direction: Char) = when (direction) {
+        '^' -> this + Point(0, -1)
+        'v' -> this + Point(0, 1)
+        '<' -> this + Point(-1, 0)
+        '>' -> this + Point(1, 0)
+        else -> throw IllegalArgumentException("Invalid direction")
+    }
 }
 
 fun <E> List<List<E>>.containsPoint(it: Point): Boolean {
@@ -73,14 +80,14 @@ fun <E> List<List<E>>.getPoint(it: Point, default: E? = null): E {
     return this[it.y][it.x]
 }
 
-fun <E> List<MutableList<E>>.setPoint(it: Point, value: E): Unit{
+fun <E> List<MutableList<E>>.setPoint(it: Point, value: E): Unit {
     if (!this.containsPoint(it)) {
         throw IllegalStateException("point $it is out of bounds")
     }
-     this[it.y][it.x] =value
+    this[it.y][it.x] = value
 }
 
-fun <E> List<List<E>>.browsePoints(): List<Pair<Point,E>> {
+fun <E> List<List<E>>.browsePoints(): List<Pair<Point, E>> {
     return this.indices
         .flatMap { y ->
             this[y].indices.map { x ->
@@ -89,3 +96,14 @@ fun <E> List<List<E>>.browsePoints(): List<Pair<Point,E>> {
         }
 }
 
+
+fun <E> List<List<E>>.findPoint(c: E): Point {
+    this.indices.forEach { y ->
+        this[y].indices.forEach { x ->
+            if (this[y][x] == c) {
+                return Point(x, y)
+            }
+        }
+    }
+    throw IllegalArgumentException("Point not found")
+}

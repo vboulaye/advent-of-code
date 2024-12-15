@@ -1,7 +1,6 @@
 package aoc2024.day15
 
 import utils.*
-import java.nio.file.Files.move
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -41,11 +40,10 @@ class Puzzle {
     val part1ExpectedResult = 10092
     fun part1(rawInput: List<String>): Result {
         val (map, path) = clean(rawInput)
-        var robot = findPoint(map, '@')
+        var robot = map.findPoint('@')
         path.forEach { direction ->
             println(direction)
-            robot = doMove(direction, robot to '@', map)
-            // map.forEach { line -> println(line.joinToString("")) }
+            robot = doMove(direction, robot to '@', map, false)
         }
         return map.browsePoints()
             .filter { it.second == 'O' }
@@ -55,9 +53,10 @@ class Puzzle {
     private fun doMove(
         direction: Char,
         robot: Pair<Point, Char>,
-        map: List<MutableList<Char>>
+        map: List<MutableList<Char>>,
+        trialMode:Boolean
     ): Point {
-        val newPoint = move(direction, robot.first)
+        val newPoint = robot.first.move(direction)
         val value = map.getPoint(newPoint)
         val newPosition = when (value) {
             '#' -> {
@@ -66,11 +65,12 @@ class Puzzle {
 
             'O' -> {
                 val newPoint2 = tryMove(direction, newPoint to value, map)
-//                val newPoint2 = doMove(direction, newPoint to value, map)
                 if (newPoint2 == newPoint) {
                     robot.first
                 } else {
-                    doMove(direction, newPoint to value, map)
+                    if (!trialMode) {
+                        doMove(direction, newPoint to value, map, trialMode)
+                    }
                     newPoint
                 }
             }
@@ -82,8 +82,10 @@ class Puzzle {
                     if (newPoint3 == other) {
                         robot.first
                     } else {
-                        doMove(direction, other to ']', map)
-                        doMove(direction, newPoint to value, map)
+                        if (!trialMode) {
+                            doMove(direction, other to ']', map, trialMode)
+                            doMove(direction, newPoint to value, map, trialMode)
+                        }
                         newPoint
                     }
                 } else {
@@ -93,8 +95,10 @@ class Puzzle {
                     if (newPoint2 == newPoint || newPoint3 == other) {
                         robot.first
                     } else {
-                        doMove(direction, newPoint to value, map)
-                        doMove(direction, other to ']', map)
+                        if (!trialMode) {
+                            doMove(direction, newPoint to value, map,trialMode)
+                            doMove(direction, other to ']', map,trialMode)
+                        }
                         newPoint
                     }
                 }
@@ -107,8 +111,10 @@ class Puzzle {
                     if (newPoint3 == other) {
                         robot.first
                     } else {
-                        doMove(direction, other to '[', map)
-                        doMove(direction, newPoint to value, map)
+                        if (!trialMode) {
+                            doMove(direction, other to '[', map,trialMode)
+                            doMove(direction, newPoint to value, map,trialMode)
+                        }
                         newPoint
                     }
                 } else {
@@ -118,8 +124,10 @@ class Puzzle {
                     if (newPoint2 == newPoint || newPoint3 == other) {
                         robot.first
                     } else {
-                        doMove(direction, newPoint to value, map)
-                        doMove(direction, other to '[', map)
+                        if (!trialMode) {
+                            doMove(direction, newPoint to value, map,trialMode)
+                            doMove(direction, other to '[', map,trialMode)
+                        }
                         newPoint
                     }
                 }
@@ -133,13 +141,16 @@ class Puzzle {
                 throw IllegalArgumentException("Invalid value")
             }
         }
-        if (newPosition == robot.first) {
-            println("hit wall")
-        } else {
-            println("moving " + robot.second)
-            map.setPoint(newPoint, robot.second)
-            map.setPoint(robot.first, '.')
+        if (!trialMode) {
+            if (newPosition == robot.first) {
+                println("hit wall")
+            } else {
+                println("moving " + robot.second)
+                map.setPoint(newPoint, robot.second)
+                map.setPoint(robot.first, '.')
+            }
         }
+
         return newPosition
     }
 
@@ -148,7 +159,15 @@ class Puzzle {
         robot: Pair<Point, Char>,
         map: List<MutableList<Char>>
     ): Point {
-        val newPoint = move(direction, robot.first)
+        return doMove(direction, robot, map, true)
+    }
+
+    private fun tryMove2(
+        direction: Char,
+        robot: Pair<Point, Char>,
+        map: List<MutableList<Char>>
+    ): Point {
+        val newPoint = robot.first.move(direction)
         val value = map.getPoint(newPoint)
         val newPosition = when (value) {
             '#' -> {
@@ -218,31 +237,6 @@ class Puzzle {
         return newPosition
     }
 
-    fun <E> List<MutableList<E>>.setPoint(it: Point, value: E): Unit {
-        if (!this.containsPoint(it)) {
-            throw IllegalStateException("point $it is out of bounds")
-        }
-        this[it.y][it.x] = value
-    }
-
-    private fun move(direction: Char, robot: Point) = when (direction) {
-        '^' -> robot + Point(0, -1)
-        'v' -> robot + Point(0, 1)
-        '<' -> robot + Point(-1, 0)
-        '>' -> robot + Point(1, 0)
-        else -> throw IllegalArgumentException("Invalid direction")
-    }
-
-    fun findPoint(map: List<MutableList<Char>>, c: Char): Point {
-        map.indices.forEach { y ->
-            map[y].indices.forEach { x ->
-                if (map[y][x] == c) {
-                    return Point(x, y)
-                }
-            }
-        }
-        throw IllegalArgumentException("Point not found")
-    }
 
     val part2ExpectedResult = 9021
     fun part2(rawInput: List<String>): Result {
@@ -259,15 +253,15 @@ class Puzzle {
                     }
                 }.toMutableList()
             }
-        map.forEach { line -> println(line.joinToString("")) }
-        var robot = findPoint(map, '@')
+        //    map.forEach { line -> println(line.joinToString("")) }
+        var robot = map.findPoint('@')
         path.forEach { direction ->
             println(direction)
-            robot = doMove(direction, robot to '@', map)
-            map.forEach { line -> println(line.joinToString("")) }
+            robot = doMove(direction, robot to '@', map,false)
+            //      map.forEach { line -> println(line.joinToString("")) }
         }
 
-        map.forEach { line -> println(line.joinToString("")) }
+        //   map.forEach { line -> println(line.joinToString("")) }
 
         return map.browsePoints()
             .filter { it.second == '[' }
