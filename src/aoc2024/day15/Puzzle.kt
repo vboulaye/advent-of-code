@@ -1,6 +1,7 @@
 package aoc2024.day15
 
 import utils.*
+import java.nio.file.Files.move
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -43,12 +44,12 @@ class Puzzle {
         var robot = findPoint(map, '@')
         path.forEach { direction ->
             println(direction)
-            robot= doMove(direction, robot to  '@', map)
-            map.forEach { line-> println(line.joinToString("")) }
+            robot = doMove(direction, robot to '@', map)
+            // map.forEach { line -> println(line.joinToString("")) }
         }
         return map.browsePoints()
             .filter { it.second == 'O' }
-            .sumOf { it.first.x + it.first.y*100}
+            .sumOf { it.first.x + it.first.y * 100 }
     }
 
     private fun doMove(
@@ -58,36 +59,163 @@ class Puzzle {
     ): Point {
         val newPoint = move(direction, robot.first)
         val value = map.getPoint(newPoint)
-        when (value) {
+        val newPosition = when (value) {
             '#' -> {
-                println("hit wall")
-                return robot.first
+                robot.first
             }
 
             'O' -> {
-                val newPoint2 = doMove(direction, newPoint to value, map)
+                val newPoint2 = tryMove(direction, newPoint to value, map)
+//                val newPoint2 = doMove(direction, newPoint to value, map)
                 if (newPoint2 == newPoint) {
-
-                    println("hit wall")
-                    return robot.first
+                    robot.first
+                } else {
+                    doMove(direction, newPoint to value, map)
+                    newPoint
                 }
-                println("moved " + robot.second)
-                map.setPoint(newPoint, robot.second)
-                map.setPoint(robot.first, '.')
-                return newPoint
+            }
+
+            '[' -> {
+                if (direction == '>') {
+                    val other = newPoint + Point(1, 0)
+                    val newPoint3 = tryMove(direction, other to ']', map)
+                    if (newPoint3 == other) {
+                        robot.first
+                    } else {
+                        doMove(direction, other to ']', map)
+                        doMove(direction, newPoint to value, map)
+                        newPoint
+                    }
+                } else {
+                    val newPoint2 = tryMove(direction, newPoint to value, map)
+                    val other = newPoint + Point(1, 0)
+                    val newPoint3 = tryMove(direction, other to ']', map)
+                    if (newPoint2 == newPoint || newPoint3 == other) {
+                        robot.first
+                    } else {
+                        doMove(direction, newPoint to value, map)
+                        doMove(direction, other to ']', map)
+                        newPoint
+                    }
+                }
+            }
+
+            ']' -> {
+                if (direction == '<') {
+                    val other = newPoint + Point(-1, 0)
+                    val newPoint3 = tryMove(direction, other to '[', map)
+                    if (newPoint3 == other) {
+                        robot.first
+                    } else {
+                        doMove(direction, other to '[', map)
+                        doMove(direction, newPoint to value, map)
+                        newPoint
+                    }
+                } else {
+                    val newPoint2 = tryMove(direction, newPoint to value, map)
+                    val other = newPoint + Point(-1, 0)
+                    val newPoint3 = tryMove(direction, other to '[', map)
+                    if (newPoint2 == newPoint || newPoint3 == other) {
+                        robot.first
+                    } else {
+                        doMove(direction, newPoint to value, map)
+                        doMove(direction, other to '[', map)
+                        newPoint
+                    }
+                }
             }
 
             '.' -> {
-                println("moved" + robot.second)
-                map.setPoint(newPoint, robot.second)
-                map.setPoint(robot.first, '.')
-                return newPoint
+                newPoint
             }
 
             else -> {
                 throw IllegalArgumentException("Invalid value")
             }
         }
+        if (newPosition == robot.first) {
+            println("hit wall")
+        } else {
+            println("moving " + robot.second)
+            map.setPoint(newPoint, robot.second)
+            map.setPoint(robot.first, '.')
+        }
+        return newPosition
+    }
+
+    private fun tryMove(
+        direction: Char,
+        robot: Pair<Point, Char>,
+        map: List<MutableList<Char>>
+    ): Point {
+        val newPoint = move(direction, robot.first)
+        val value = map.getPoint(newPoint)
+        val newPosition = when (value) {
+            '#' -> {
+                robot.first
+            }
+
+            'O' -> {
+                val newPoint2 = tryMove(direction, newPoint to value, map)
+                if (newPoint2 == newPoint) {
+                    robot.first
+                } else {
+                    newPoint
+                }
+            }
+
+            '[' -> {
+                if (direction == '>') {
+                    val other = newPoint + Point(1, 0)
+                    val newPoint3 = tryMove(direction, other to ']', map)
+                    if (newPoint3 == other) {
+                        robot.first
+                    } else {
+                        newPoint
+                    }
+                } else {
+                    val newPoint2 = tryMove(direction, newPoint to value, map)
+                    val other = newPoint + Point(1, 0)
+                    val newPoint3 = tryMove(direction, other to ']', map)
+                    if (newPoint2 == newPoint || newPoint3 == other) {
+                        robot.first
+                    } else {
+                        newPoint
+                    }
+                }
+            }
+
+            ']' -> {
+                if (direction == '<') {
+                    val other = newPoint + Point(-1, 0)
+                    val newPoint3 = tryMove(direction, other to '[', map)
+                    if (newPoint3 == other) {
+                        robot.first
+                    } else {
+                        newPoint
+                    }
+                } else {
+                    val newPoint2 = tryMove(direction, newPoint to value, map)
+                    val other = newPoint + Point(-1, 0)
+                    val newPoint3 = tryMove(direction, other to '[', map)
+                    if (newPoint2 == newPoint || newPoint3 == other) {
+                        robot.first
+                    } else {
+                        newPoint
+                    }
+                }
+            }
+
+            '.' -> {
+                newPoint
+            }
+
+            else -> {
+                throw IllegalArgumentException("Invalid value" + value)
+            }
+        }
+
+        return newPosition
     }
 
     fun <E> List<MutableList<E>>.setPoint(it: Point, value: E): Unit {
@@ -116,11 +244,34 @@ class Puzzle {
         throw IllegalArgumentException("Point not found")
     }
 
-    val part2ExpectedResult = 0
+    val part2ExpectedResult = 9021
     fun part2(rawInput: List<String>): Result {
-        val input = clean(rawInput)
+        var (map, path) = clean(rawInput)
+        map = map
+            .map { line ->
+                line.flatMap {
+                    when (it) {
+                        '@' -> listOf('@', '.')
+                        '#' -> listOf(it, it)
+                        '.' -> listOf(it, it)
+                        'O' -> listOf('[', ']')
+                        else -> throw IllegalArgumentException("Invalid value")
+                    }
+                }.toMutableList()
+            }
+        map.forEach { line -> println(line.joinToString("")) }
+        var robot = findPoint(map, '@')
+        path.forEach { direction ->
+            println(direction)
+            robot = doMove(direction, robot to '@', map)
+            map.forEach { line -> println(line.joinToString("")) }
+        }
 
-        return 0
+        map.forEach { line -> println(line.joinToString("")) }
+
+        return map.browsePoints()
+            .filter { it.second == '[' }
+            .sumOf { it.first.x + it.first.y * 100 }
     }
 
 }
@@ -147,7 +298,7 @@ fun main() {
         println("${part}: test took ${testDuration.inWholeMilliseconds}ms, full took ${fullDuration.inWholeMilliseconds}ms")
     }
 
-    runPart("part1", puzzle.part1ExpectedResult, puzzle::part1)
+    //runPart("part1", puzzle.part1ExpectedResult, puzzle::part1)
     runPart("part2", puzzle.part2ExpectedResult, puzzle::part2)
 
 }
