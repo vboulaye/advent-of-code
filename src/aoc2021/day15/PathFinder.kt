@@ -69,7 +69,7 @@ class PathFinder<E, R>(findRelated: FindRelated<E, R>?) {
      * @return the queue with all evaluated nodes, the path can be build from
      * there
      */
-    private fun computePath(sourceNode: E, targetNode: E): PathPriorityQueue<E> {
+      fun computePath(sourceNode: E, targetNode: E): PathPriorityQueue<E> {
         // set of nodes that are still possible choices for the path
         val remainingNodes = PathPriorityQueue<E>()
 
@@ -152,6 +152,7 @@ class PathFinder<E, R>(findRelated: FindRelated<E, R>?) {
 
             // distance = current distance from source + distance(current note, neighbour)
             val distance = closestNodeWorkPathElement.distance + relatedPath.distance
+            if(distance<0) throw Exception("negative distance")
 
             // check if the new distance is closer
             val oldDistance = relatedNodeWorkPathElement.distance
