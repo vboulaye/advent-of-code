@@ -2,6 +2,7 @@ package aoc2024.day16
 
 import aoc2021.day15.*
 import utils.*
+import java.util.*
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -28,86 +29,65 @@ class Puzzle {
         val input = clean(rawInput)
         val start = input.findPoint('S')
         val end = input.findPoint('E')
-        val pathFinder = PathFinder(Finder(input))
-        val remainingNodes = pathFinder.computePath(start, end)
-        val workPathElement = remainingNodes.getWorkPathElement(end)
-        //too high 225808
-        //         257919
-//        val findPath = pathFinder.findPath(start, end).reversed()
-//        findPath.zipWithNext { a, b ->
-//            println("${a.element} -> ${b.element} ${b.distance}")
-//            if(b.element==a.predecessor) throw Exception()
-//        }
-//        val sum = findPath.zipWithNext { a, b ->
-//            if (b.distance - a.distance > 1) {
-//                println("${a.element} -> ${b.element} ${b.distance}")
-//                1
-//            } else {
-//                0
-//            }
-//        }.sum()
 
-//        val map = findPath.map { it.element }
-//        val x=map.count()
-//        val xzx=map.distinct().count()
+        val map: Map<Pair<Point, Point>, Int> = dijkstra(input, start to Point(1, 0))
 
-
-        return workPathElement.distance
+        return map.get(end to Point(0, -1))!!
     }
 
-    class Finder(val grid: List<List<Char>>) : FindRelated<Point, Pair<Point, Point>> {
+    fun dijkstra(
+        grid: List<List<Char>>,
+        start: Pair<Point, Point>
+    ): Map<Pair<Point, Point>, Int> {
+        val distances = mutableMapOf<Pair<Point, Point>, Int>().withDefault { Int.MAX_VALUE }
+        val priorityQueue =
+            PriorityQueue<Pair<Pair<Point, Point>, Int>>(compareBy { it.second }).apply { add(start to 0) }
 
-        override fun findRelated(p: WorkPathElement<Point>?): List<WorkPathElement<Point>> {
-            if (p == null) {
-                return emptyList()
-            }
+        distances[start] = 0
 
-            val neighbours: List<WorkPathElement<Point>> =
-                p.element.neighbours()
-                    .filter { point ->
-                        this.grid.containsPoint(point)
-                                && this.grid.getPoint(point) != '#'
-                                && p.predecessor != point
-                    }
-                    .mapNotNull { point ->
-                        val workPathElement = WorkPathElement(point)
-                        workPathElement.distance = 1 + 1000 * rotation(p, point)
-                        if (workPathElement.distance > 2000) {
-                            null
-                        } else {
-                            workPathElement
-                        }
-                    }
+        while (priorityQueue.isNotEmpty()) {
+            val (node, currentDist) = priorityQueue.poll()
 
-
-            return neighbours
-        }
-
-        private fun rotation(workPathElement: WorkPathElement<Point>, point: Point): Int {
-
-            val vector = point - workPathElement.element
-            val previousVector: Point
-            val predecessor = workPathElement.predecessor
-            if (predecessor == null) {
-                previousVector = Point(1, 0)
-            } else {
-                previousVector = workPathElement.element - predecessor
-            }
-
-            return when {
-                vector == previousVector -> 0
-                vector.y == 0 && previousVector.x == 0 -> 1
-                vector.x == 0 && previousVector.y == 0 -> 1
-                else -> 2
+            getNeighbours(node, grid).forEach { (adjacent, weight) ->
+                val totalDist = currentDist + weight
+                if (totalDist < distances.getValue(adjacent)) {
+                    distances[adjacent] = totalDist
+                    priorityQueue.add(adjacent to totalDist)
+                }
             }
         }
+        return distances
     }
 
-    val part2ExpectedResult = 0
+    private fun getNeighbours(node: Pair<Point, Point>, grid: List<List<Char>>): List<Pair<Pair<Point, Point>, Int>> {
+        val sourcePoint = node.first
+        val sourceDirection = node.second
+        return sourcePoint.neighbours()
+            .filter { grid.containsPoint(it) && grid.getPoint(it) != '#' }
+            .mapNotNull { point ->
+                val newDirection = point - sourcePoint
+                if (newDirection == sourceDirection) {
+                    point to newDirection to 1
+                } else if (newDirection == sourceDirection * -1) {
+                    null
+                } else {
+                    point to newDirection to 1001
+                }
+            }
+
+    }
+
+
+    val part2ExpectedResult = 64
     fun part2(rawInput: List<String>): Result {
         val input = clean(rawInput)
+        val start = input.findPoint('S')
+        val end = input.findPoint('E')
 
-        return 0
+        val map: Map<Pair<Point, Point>, Int> = dijkstra(input, start to Point(1, 0))
+
+        return map.get(end to Point(0, -1))!!
+
     }
 
 }
