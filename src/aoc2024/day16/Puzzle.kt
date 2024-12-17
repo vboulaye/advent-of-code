@@ -30,9 +30,7 @@ class Puzzle {
         val start = input.findPoint('S')
         val end = input.findPoint('E')
 
-        val map: Map<Pair<Point, Point>, Int> = dijkstra(input, start to Point(1, 0))
-
-        return map.get(end to Point(0, -1))!!
+        return getMinLength(input, start to Point(1, 0), end to Point(0, -1))
     }
 
     fun dijkstra(
@@ -84,10 +82,30 @@ class Puzzle {
         val start = input.findPoint('S')
         val end = input.findPoint('E')
 
-        val map: Map<Pair<Point, Point>, Int> = dijkstra(input, start to Point(1, 0))
+        val startWithDir = start to Point(1, 0)
+        val endWithDir = end to Point(0, -1)
+        val minLength = getMinLength(input, startWithDir, endWithDir)
+        return  input.browsePoints()
+            .filter { it.second != '#' }
+            .count {
+                it.first.neighbours().any { n ->
+                    val seat = it.first to n - it.first
+                    minLength == getMinLength(input, startWithDir, seat) + getMinLength(input, seat, endWithDir)
+                }
+            }
 
-        return map.get(end to Point(0, -1))!!
 
+
+    }
+
+    private fun getMinLength(
+        input: List<List<Char>>,
+        startWithDir: Pair<Point, Point>,
+        endWithDir: Pair<Point, Point>
+    ): Int {
+        val map: Map<Pair<Point, Point>, Int> = dijkstra(input, startWithDir)
+        val minLength = map.get(endWithDir) ?: Int.MAX_VALUE
+        return minLength
     }
 
 }
