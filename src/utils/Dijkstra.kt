@@ -15,6 +15,31 @@ fun <P> disktraCompute(
     )
         .compute(start, nextGetter)
 }
+fun <P> disktraComputeLong(
+    start: P,
+    nextGetter: (P) -> List<Pair<P, Long>>,
+): MutableMap<P, Long> {
+    return Dijkstra<P, Long>(
+        minDistance = 0,
+        maxDistance = Long.MAX_VALUE,
+        comparator = Long::compareTo,
+        distanceAdder = Long::plus,
+    )
+        .compute(start, nextGetter)
+}
+
+fun <P> disktraComputeDouble(
+    start: P,
+    nextGetter: (P) -> List<Pair<P, Double>>,
+): MutableMap<P, Double> {
+    return Dijkstra<P, Double>(
+        minDistance = 0.0,
+        maxDistance = Double.MAX_VALUE,
+        comparator = Double::compareTo,
+        distanceAdder = Double::plus,
+    )
+        .compute(start, nextGetter)
+}
 
 
 class Dijkstra<DijkstraPoint, DijkstraDistance>(
