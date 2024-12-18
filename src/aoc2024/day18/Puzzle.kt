@@ -30,61 +30,49 @@ class Puzzle {
     val part1ExpectedResult = "22"
     fun part1(rawInput: List<String>): Result {
         val input = clean(rawInput)
-        val w = input.maxOf { it.x }
-        val h = input.maxOf { it.y }
+        val (w, h, grid) = initGrid(input)
 
-        val grid = (0..h).map { y ->
-            (0..w).map { x ->
-                '.'
-            }.toMutableList()
-        }
-
-        val iteraitons = if (input.size < 100) 12 else 1024
-        (0 until iteraitons).forEach { i ->
+        val iterations = if (input.size < 100) 12 else 1024
+        (0 until iterations).forEach { i ->
             input[i].let { p ->
                 grid[p.y][p.x] = '#'
             }
         }
+
         val start = Point(0, 0)
         val end = Point(w, h)
-        val dijkstra = dijkstra(grid, start)
-
+        val dijkstra = disktraCompute(start, { node: Point -> getNeighbours(node, grid) })
         return dijkstra.get(end)!!.toString()
     }
 
-    //140
     fun getNeighbours(node: Point, grid: List<MutableList<Char>>): List<Pair<Point, Int>> {
-        return node.neighbours().filter { grid.containsPoint(it) && grid.getPoint(it) != '#' }
+        return node.neighbours()
+            .filter { grid.containsPoint(it) && grid.getPoint(it) != '#' }
             .map { it to 1 }
-    }
-
-    fun dijkstra(grid: List<MutableList<Char>>, start: Point): Map<Point, Int> {
-        val distances = mutableMapOf<Point, Int>().withDefault { Int.MAX_VALUE }
-        val priorityQueue = PriorityQueue<Pair<Point, Int>>(compareBy { it.second })
-        val visited = mutableSetOf<Pair<Point, Int>>()
-
-        priorityQueue.add(start to 0)
-        distances[start] = 0
-//        graph: Map<Point, List<Pair<Point, Int>>>,
-        while (priorityQueue.isNotEmpty()) {
-            val (node, currentDist) = priorityQueue.poll()
-            if (visited.add(node to currentDist)) {
-//                graph[node]?
-                getNeighbours(node, grid).forEach { (adjacent, weight) ->
-                    val totalDist = currentDist + weight
-                    if (totalDist < distances.getValue(adjacent)) {
-                        distances[adjacent] = totalDist
-                        priorityQueue.add(adjacent to totalDist)
-                    }
-                }
-            }
-        }
-        return distances
     }
 
     val part2ExpectedResult = "6,1"
     fun part2(rawInput: List<String>): Result {
         val input = clean(rawInput).toMutableList()
+        val (w, h, grid) = initGrid(input)
+
+        while (true) {
+            val p = input.removeFirst()
+            grid[p.y][p.x] = '#'
+            val start = Point(0, 0)
+            val end = Point(w, h)
+
+            val dijkstra = disktraCompute(start, { node: Point -> getNeighbours(node, grid) })
+            val l = dijkstra.get(end)
+            if (l == null) {
+                return p.x.toString() + "," + p.y
+            }
+        }
+
+
+    }
+
+    private fun initGrid(input: List<Point>): Triple<Int, Int, List<MutableList<Char>>> {
         val w = input.maxOf { it.x }
         val h = input.maxOf { it.y }
 
@@ -93,28 +81,7 @@ class Puzzle {
                 '.'
             }.toMutableList()
         }
-
-        var p = Point(0, 0)
-        var iteraion = 0
-        while (true) {
-            p = input.removeFirst()
-            grid[p.y][p.x] = '#'
-//            val iteraitons = if(input.size<100) 12 else 1024
-//            (0 until iteraitons).forEach { i ->
-//                input[i].let { p ->
-//                    grid[p.y][p.x] = '#'
-//                }
-//            }
-            val start = Point(0, 0)
-            val end = Point(w, h)
-            val dijkstra = dijkstra(grid, start)
-            val l = dijkstra.get(end)
-            if(l==null )       {
-                return p.x.toString() + "," + p.y
-            }
-        }
-
-
+        return Triple(w, h, grid)
     }
 
 }
@@ -141,7 +108,7 @@ fun main() {
         println("${part}: test took ${testDuration.inWholeMilliseconds}ms, full took ${fullDuration.inWholeMilliseconds}ms")
     }
 
-//    runPart("part1", puzzle.part1ExpectedResult, puzzle::part1)
+    runPart("part1", puzzle.part1ExpectedResult, puzzle::part1)
     runPart("part2", puzzle.part2ExpectedResult, puzzle::part2)
 
 }
