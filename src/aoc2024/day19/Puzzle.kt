@@ -52,26 +52,27 @@ class Puzzle {
             .filter { design -> r.matches(design) }
             .sumOf { design ->
                 print("\n\n\ncount($design) = \n")
-                val d = decompose(design, input.patterns)
+                val d = decompose(design, input.patterns,r)
 //                val count = count(r, design, r2, input.patterns,0)
                 d.size
             }
     }
 
-    val cache = mutableMapOf<String, List<List<String>>>()
+    val cache = mutableMapOf<String, List<Int>>()
 
-    private fun decompose(design: String, patterns: List<String>): List<List<String>> {
-        if (design.isEmpty()) return listOf(listOf())
-        cache.get(design)?.let {
-//            println("cache hit")
-            return it }
+    private fun decompose(design: String, patterns: List<String>, r: Regex): List<Int> {
+        if (design.isEmpty()) return listOf(0)
+        if (!r.matches(design) ) return listOf()
+//        cache.get(design)?.let {
+//            return it }
         val flatMap = patterns
-            .filter { design.startsWith(it) }
+
+            .filter { it -> design.startsWith(it) }
             .flatMap { firstPattern ->
-                decompose(design.replaceFirst(firstPattern, ""), patterns)
-                    .map { listOf(firstPattern) + it }
+                decompose(design.replaceFirst(firstPattern, ""), patterns, r)
+                    .map { 1 + it }
             }
-        cache.put(design, flatMap)
+//        cache.put(design, flatMap)
         return flatMap
 //            .map { firstPattern => decompose( design.replaceFirst(firstPattern, ""), patterns)
 //                    .flatMap { l => listOf(it ) + l } }
