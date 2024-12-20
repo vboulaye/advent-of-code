@@ -37,17 +37,17 @@ class Puzzle {
                 .map { it to 1 }
         }
         val maxTime= disktraCompute.get(end)!!
+        val dijkstra = initDijkstra<Point>()
         val stepToDistance = (0 until maxTime)
             .map { step ->
-                val disktraCompute2 = disktraCompute(start to 0) { p ->
-                    p.first.neighbours()
-                        .filter { input.getPoint(it,'#') != '#'
-                                || (p.second in listOf(step, step + 1) && input.containsPoint(it)) }
-                        .map { it to p.second + 1 to 1 }
+                val computePath = dijkstra.computePath(start, end) { p, comingFrom ->
+                    val l = dijkstra.generatePath(p, comingFrom).size
+                    if (l == step+2 && input.getPoint(p) == '#' ) return@computePath emptyList()
+                    p.neighbours()
+                        .filter { input.containsPoint(it) && (input.getPoint(it) != '#' || (step == l ))  }
+                        .map { it to 1 }
                 }
-                val best = disktraCompute2.filter { (x, d) -> x.first == end }
-                    .entries.sortedBy { it.value }.map { it.value }.first()
-                step to (maxTime - best)
+                step to (maxTime-computePath.second)
             }
 
 //        val flatMap = walls.flatMap { wall ->
@@ -79,6 +79,7 @@ class Puzzle {
 
 
         val reversed = stepToDistance.sortedBy { it.second }.reversed()
+        val reversedx = stepToDistance.groupingBy { it.second }
         return 0
 
     }
@@ -127,3 +128,5 @@ fun main() {
     runPart("part2", puzzle.part2ExpectedResult, puzzle::part2)
 
 }
+
+
