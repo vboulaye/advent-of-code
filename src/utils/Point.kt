@@ -2,7 +2,7 @@ package utils
 
 import java.io.Serializable
 
-data class Point(val x: Int, val y: Int) : Serializable {
+data class Point(val x: Int, val y: Int) : Serializable, Comparable<Point> {
     override fun equals(other: Any?): Boolean {
         if (this === other) return true
         if (javaClass != other?.javaClass) return false
@@ -13,6 +13,13 @@ data class Point(val x: Int, val y: Int) : Serializable {
         if (y != other.y) return false
 
         return true
+    }
+
+    override fun compareTo(other: Point): Int {
+        val compareTo = this.y.compareTo(other.y)
+        if(compareTo==0)
+        return this.x.compareTo(other.x)
+        return compareTo
     }
 
     override fun hashCode(): Int {
