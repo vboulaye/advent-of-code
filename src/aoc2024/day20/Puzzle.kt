@@ -27,28 +27,70 @@ class Puzzle {
         val input = clean(rawInput)
         val start = input.findPoint('S')
         val end = input.findPoint('E')
-        val walls = input.browsePoints()
-            .filter { (p, v) ->
-                isWall(p, input, v)
-            }
-        val disktraCompute = disktraCompute(start) { p ->
+
+        val dijkstra = initDijkstra<Point>()
+        val disktraCompute = dijkstra.compute(start) { p ->
             p.neighbours()
                 .filter { input.getPoint(it) != '#' }
                 .map { it to 1 }
         }
-        val maxTime= disktraCompute.get(end)!!
-        val dijkstra = initDijkstra<Point>()
-        val stepToDistance = (0 until maxTime)
-            .map { step ->
-                val computePath = dijkstra.computePath(start, end) { p, comingFrom ->
-                    val l = dijkstra.generatePath(p, comingFrom).size
-                    if (l == step+2 && input.getPoint(p) == '#' ) return@computePath emptyList()
+        val maxTime = disktraCompute.get(end)!!
+        println(maxTime)
+        val pointDistance = input.browsePoints()
+            .filter { (p, v) -> v != '#' }
+            .map { (p, v) ->
+                p to dijkstra.computePath(p, end) { p, m ->
                     p.neighbours()
-                        .filter { input.containsPoint(it) && (input.getPoint(it) != '#' || (step == l ))  }
+                        .filter { input.getPoint(it) != '#' }
                         .map { it to 1 }
-                }
-                step to (maxTime-computePath.second)
+                }.second
             }
+            .toMap()
+
+        val computePath = dijkstra.computePath(start, end) { p, m ->
+            p.neighbours()
+                .filter { input.getPoint(it) != '#' }
+                .map { it to 1 }
+        }
+        val stepToDistance =   computePath.first.flatMapIndexed { index, point ->
+            point.neighbours()
+                .filter { input.getPoint(it) == '#' }
+                .flatMap { n->
+                    n.neighbours()
+                        .filter { input.getPoint(it,'#') != '#' }
+                        .map{ nn->
+                            (n to nn) to (maxTime-(index+2+pointDistance.get(nn)!!))
+                        }
+
+                }
+        }
+
+
+//        val stepToDistance = (0 until maxTime)
+//            .mapNotNull { step ->
+//                println(step)
+//                val computePath = dijkstra.computePath(start, end) { p, comingFrom ->
+//                    val l = dijkstra.generatePath(p, comingFrom).size
+////                    if (l  > 1+ (disktraCompute.get(p) ?: Int.MAX_VALUE) ) return@computePath emptyList()
+//                    if (l == step+2 && input.getPoint(p) == '#' ) return@computePath emptyList()
+//                    p.neighbours()
+//                        .filter {
+//                            (input.containsPoint(it)
+//                                    && (input.getPoint(it) != '#' || (step == l)))
+//                        }
+//                        .map { it to 1 }
+//                }
+//                val startCheat: Point? = computePath.first.find { input.getPoint(it) == '#' }
+//                if (startCheat==null) {
+//                    null
+//                } else {
+//                    val endCheat: Point? = computePath.first.findLast { input.getPoint(it) == '#' }
+//                    (startCheat to endCheat!!) to (maxTime-computePath.second)
+//                }
+//
+////                step to (maxTime-computePath.second)
+//            }
+//            .distinct()
 
 //        val flatMap = walls.flatMap { wall ->
 //            val wallstoDrop = wall.first.neighbours()
@@ -79,8 +121,8 @@ class Puzzle {
 
 
         val reversed = stepToDistance.sortedBy { it.second }.reversed()
-        val reversedx = stepToDistance.groupingBy { it.second }
-        return 0
+        val reversedx: Grouping<Pair<Pair<Point, Point>, Int>, Int> = stepToDistance.groupingBy { it.second }
+        return reversed.filter { it.second >= 100 }.count()
 
     }
 
