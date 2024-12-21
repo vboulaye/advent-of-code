@@ -1,6 +1,6 @@
 package aoc2024.day21
 
-import utils.readInput
+import utils.*
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -9,6 +9,17 @@ typealias Result = Int
 
 class Puzzle {
 
+    val digiboard = listOf(
+        listOf('7', '8', '9'),
+        listOf('4', '5', '6'),
+        listOf('1', '2', '3'),
+        listOf('#', '0', 'A'),
+    )
+
+    val arrowboard = listOf(
+        listOf('#', '^', 'A'),
+        listOf('<', 'v', '>'),
+    )
 
     fun String.acceptInput() = true
 
@@ -16,17 +27,70 @@ class Puzzle {
         return this
     }
 
-    fun clean(input: List<String>): List<String> {
+    fun clean(input: List<String>): List<List<Char>> {
         return input
             .filter { line -> line.acceptInput() }
-            .map { line -> line.parseInput() }
+            .map { line -> line.toList() }
     }
 
     val part1ExpectedResult = 0
     fun part1(rawInput: List<String>): Result {
-        val input = clean(rawInput)
+        val codes = clean(rawInput)
 
-        return 0
+
+        val dijkstra = initDijkstra<Point>()
+        return codes
+            .map { code ->
+
+                val movesList = getMoves(digiboard, 'A', code, dijkstra)
+                val movesList2 = getMoves(arrowboard, 'A', movesList, dijkstra)
+                val movesList3 = getMoves(arrowboard, 'A', movesList2, dijkstra)
+                val codeInt = code.removeLast().joinToString("").toInt()
+                movesList3.size * codeInt
+            }
+            .sumOf { it }
+    }
+
+    private fun getMoves(
+        board: List<List<Char>>,
+        startingPoint: Char,
+        code: List<Char>,
+        dijkstra: Dijkstra<Point, Int>
+    ): List<Char> {
+        val moves = lists(board, startingPoint, code, dijkstra)
+        val movesList = moves.flatMap { it }
+        return movesList
+    }
+
+    private fun lists(
+        board: List<List<Char>>,
+        startingPoint: Char,
+        code: List<Char>,
+        dijkstra: Dijkstra<Point, Int>
+    ): List<List<Char>> {
+        var start = board.findPoint(startingPoint)
+        val moves = code.map { key ->
+            val end = board.findPoint(key)
+            val path = dijkstra.computePath(start, end) { p, m ->
+                p.neighbours()
+                    .filter { n -> board.containsPoint(n) && board.getPoint(n) != '#' }
+                    .map { n -> Pair(n, 1) }
+            }
+            val pointsList = path.first
+            val directions = pointsList.removeFirst().mapIndexed { i, p ->
+                val vector = p - pointsList[i]!!
+                when (vector) {
+                    Point(0, -1) -> '^'
+                    Point(0, 1) -> 'v'
+                    Point(-1, 0) -> '<'
+                    Point(1, 0) -> '>'
+                    else -> throw IllegalArgumentException("Invalid direction")
+                }
+            }
+            start = end
+            directions + listOf('A')
+        }
+        return moves
     }
 
     val part2ExpectedResult = 0
