@@ -42,36 +42,16 @@ class Puzzle {
         return codes
             .map { code ->
 
-                val movesList: List<List<Char>> = getMoves(digiboard, 'A', code, dijkstra)
-                val map2List: List<List<Char>> = movesList.flatMap { move->
-                    getMoves(arrowboard, 'A', move, dijkstra)
-                }
-                val map3List: List<List<Char>> = map2List.flatMap { move->
-                    getMoves(arrowboard, 'A', move, dijkstra)
+                var movesList: List<List<Char>> = getMoves(digiboard, 'A', code, dijkstra)
+
+                (1..2).forEach { it ->
+                    //  println("\n"+it.toString() + " = "+"\n"+movesList.joinToString { it.joinToString("") +"\n"}+"\n"+"\n"+"\n")
+                    movesList = movesList.flatMap { move ->
+                        getMoves(arrowboard, 'A', move, dijkstra)
+                    }
                 }
 
-                val minBy = map3List.minBy { it.size }
-//                val map2 = movesList.map { movealternatives ->
-//                    movealternatives.map { moves ->
-//                        getMoves(arrowboard, 'A', moves, dijkstra)
-//                    }
-//                }
-//                val map3 = map2.map { movealternatives ->
-//                    movealternatives.map { moves ->
-//                        moves.map { movealternatives2 ->
-//                            {
-//                                movealternatives2.map { moves2 ->
-//                                    getMoves(arrowboard, 'A', moves2, dijkstra)
-//                                }
-//                            }
-//                        }
-//                    }
-//                }
-//                val movesList3 = map3.flatMap { moveAlternatives ->
-//                    moveAlternatives.minBy { it.size }
-//                }
-//                val movesList2 = getMoves(arrowboard, 'A', movesList, dijkstra)
-//                val movesList3 = getMoves(arrowboard, 'A', movesList2, dijkstra)
+                val minBy = movesList.minBy { it.size }
                 val codeInt = code.removeLast().joinToString("").toInt()
                 minBy.size * codeInt
             }
@@ -89,18 +69,20 @@ class Puzzle {
     }
 
     private fun explodesAlternatives(moves: List<List<List<Char>>>): List<List<Char>> {
-        val currentAlternatives:List<List<Char>> = moves.get(0)
-        if (moves.size==1) {
+        val currentAlternatives: List<List<Char>> = moves.get(0)
+        if (moves.size == 1) {
             return currentAlternatives
         }
         val exploded: List<List<Char>> = explodesAlternatives(moves.removeFirst())
         val result: MutableList<List<Char>> = mutableListOf<List<Char>>()
         for (explod in exploded) {
             for (currentAlternative in currentAlternatives) {
-                result.add(  currentAlternative +explod)
+                result.add(currentAlternative + explod)
             }
         }
-        return result
+        val distinct = result.distinct()
+        val minSize = distinct.minOf { it.size }
+        return distinct.filter { it.size == minSize }
     }
 
     private fun codeMoveList(
@@ -140,9 +122,30 @@ class Puzzle {
 
     val part2ExpectedResult = 0
     fun part2(rawInput: List<String>): Result {
-        val input = clean(rawInput)
+        val codes = clean(rawInput)
 
-        return 0
+
+        val dijkstra = initDijkstra<Point>()
+        return codes
+            .map { code ->
+
+                var movesList: List<List<Char>> = getMoves(digiboard, 'A', code, dijkstra)
+
+                (1..25).forEach { it ->
+                    println("\n" + it.toString() + " = " + "\n moves " + movesList.size.toString() + " length " + movesList[0].size.toString() + "\n")
+                    movesList = movesList.flatMap { move ->
+                        getMoves(arrowboard, 'A', move, dijkstra)
+                    }
+                    val distinct = movesList.distinct()
+                    val minSize = distinct.minOf { it.size }
+                    movesList= distinct.filter { it.size == minSize }
+                }
+
+                val minBy = movesList.minBy { it.size }
+                val codeInt = code.removeLast().joinToString("").toInt()
+                minBy.size * codeInt
+            }
+            .sumOf { it }
     }
 
 }
