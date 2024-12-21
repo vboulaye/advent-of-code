@@ -126,5 +126,65 @@ class Dijkstra<DijkstraPoint, DijkstraDistance>(
         }
         return path.toList()
     }
+
+    fun computePaths(
+        start: DijkstraPoint,
+        end: DijkstraPoint,
+        nextGetter: (DijkstraPoint, MutableMap<DijkstraPoint, List<DijkstraPoint>>) -> List<Pair<DijkstraPoint, DijkstraDistance>>
+    ): Pair<List<List<DijkstraPoint>>, DijkstraDistance> {
+        val distances = mutableMapOf<DijkstraPoint, DijkstraDistance>().withDefault { this.maxDistance }
+        val priorityQueue =
+            PriorityQueue<Pair<DijkstraPoint, DijkstraDistance>> { a, b -> comparator.compare(a.second, b.second) }
+        val visited = mutableSetOf<Pair<DijkstraPoint, DijkstraDistance>>()
+        val cameFrom = mutableMapOf<DijkstraPoint, List<DijkstraPoint>>()  // Used to generate path by back tracking
+
+
+        priorityQueue.add(start to this.minDistance)
+        distances[start] = this.minDistance
+
+        while (priorityQueue.isNotEmpty()) {
+            val (node, currentDist) = priorityQueue.poll()
+            if (node == end) {
+                // Backtrack to generate the most efficient path
+                val paths = generatePaths(node, cameFrom)
+                return Pair(paths, distances.getValue(end)!!)
+            }
+            if (visited.add(node to currentDist)) {
+                nextGetter(node, cameFrom).forEach { (adjacent, weight) ->
+                    val totalDist = distanceAdder(currentDist, weight)
+                    val compare = comparator.compare(totalDist, distances.getValue(adjacent))
+                    if (compare < 0) {
+
+                        cameFrom.put(adjacent, listOf(node))
+                        distances[adjacent] = totalDist
+                        priorityQueue.add(adjacent to totalDist)
+                    } else if (compare == 0) {
+                        val previous = cameFrom.get(adjacent)!!.toMutableList()
+                        previous.add(node)
+                        cameFrom.put(adjacent, previous)
+
+                    }
+                }
+            }
+        }
+        throw IllegalArgumentException("No Path from Start $start to Finish $end")
+    }
+
+    fun generatePaths(
+        currentPos: DijkstraPoint,
+        cameFrom: Map<DijkstraPoint, List<DijkstraPoint>>
+    ): List<List<DijkstraPoint>> {
+        if (!cameFrom.containsKey(currentPos)) {
+            return listOf(listOf(currentPos))
+        }
+        val previousList = cameFrom.getValue(currentPos)
+        var paths = previousList.flatMap { previous ->
+            generatePaths(previous, cameFrom)
+                .map { previousPaths ->
+                    previousPaths + listOf(currentPos)
+                }
+        }
+        return paths
+    }
 }
 

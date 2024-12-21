@@ -33,7 +33,7 @@ class Puzzle {
             .map { line -> line.toList() }
     }
 
-    val part1ExpectedResult = 0
+    val part1ExpectedResult = 126384
     fun part1(rawInput: List<String>): Result {
         val codes = clean(rawInput)
 
@@ -42,11 +42,38 @@ class Puzzle {
         return codes
             .map { code ->
 
-                val movesList = getMoves(digiboard, 'A', code, dijkstra)
-                val movesList2 = getMoves(arrowboard, 'A', movesList, dijkstra)
-                val movesList3 = getMoves(arrowboard, 'A', movesList2, dijkstra)
+                val movesList: List<List<Char>> = getMoves(digiboard, 'A', code, dijkstra)
+                val map2List: List<List<Char>> = movesList.flatMap { move->
+                    getMoves(arrowboard, 'A', move, dijkstra)
+                }
+                val map3List: List<List<Char>> = map2List.flatMap { move->
+                    getMoves(arrowboard, 'A', move, dijkstra)
+                }
+
+                val minBy = map3List.minBy { it.size }
+//                val map2 = movesList.map { movealternatives ->
+//                    movealternatives.map { moves ->
+//                        getMoves(arrowboard, 'A', moves, dijkstra)
+//                    }
+//                }
+//                val map3 = map2.map { movealternatives ->
+//                    movealternatives.map { moves ->
+//                        moves.map { movealternatives2 ->
+//                            {
+//                                movealternatives2.map { moves2 ->
+//                                    getMoves(arrowboard, 'A', moves2, dijkstra)
+//                                }
+//                            }
+//                        }
+//                    }
+//                }
+//                val movesList3 = map3.flatMap { moveAlternatives ->
+//                    moveAlternatives.minBy { it.size }
+//                }
+//                val movesList2 = getMoves(arrowboard, 'A', movesList, dijkstra)
+//                val movesList3 = getMoves(arrowboard, 'A', movesList2, dijkstra)
                 val codeInt = code.removeLast().joinToString("").toInt()
-                movesList3.size * codeInt
+                minBy.size * codeInt
             }
             .sumOf { it }
     }
@@ -56,39 +83,57 @@ class Puzzle {
         startingPoint: Char,
         code: List<Char>,
         dijkstra: Dijkstra<Point, Int>
-    ): List<Char> {
-        val moves = lists(board, startingPoint, code, dijkstra)
-        val movesList = moves.flatMap { it }
-        return movesList
+    ): List<List<Char>> {
+        val moves = codeMoveList(board, startingPoint, code, dijkstra)
+        return explodesAlternatives(moves)
     }
 
-    private fun lists(
+    private fun explodesAlternatives(moves: List<List<List<Char>>>): List<List<Char>> {
+        val currentAlternatives:List<List<Char>> = moves.get(0)
+        if (moves.size==1) {
+            return currentAlternatives
+        }
+        val exploded: List<List<Char>> = explodesAlternatives(moves.removeFirst())
+        val result: MutableList<List<Char>> = mutableListOf<List<Char>>()
+        for (explod in exploded) {
+            for (currentAlternative in currentAlternatives) {
+                result.add(  currentAlternative +explod)
+            }
+        }
+        return result
+    }
+
+    private fun codeMoveList(
         board: List<List<Char>>,
         startingPoint: Char,
         code: List<Char>,
         dijkstra: Dijkstra<Point, Int>
-    ): List<List<Char>> {
+    ): List<List<List<Char>>> {
         var start = board.findPoint(startingPoint)
         val moves = code.map { key ->
             val end = board.findPoint(key)
-            val path = dijkstra.computePath(start, end) { p, m ->
+            val paths = dijkstra.computePaths(start, end) { p, m ->
                 p.neighbours()
                     .filter { n -> board.containsPoint(n) && board.getPoint(n) != '#' }
                     .map { n -> Pair(n, 1) }
             }
-            val pointsList = path.first
-            val directions = pointsList.removeFirst().mapIndexed { i, p ->
-                val vector = p - pointsList[i]!!
-                when (vector) {
-                    Point(0, -1) -> '^'
-                    Point(0, 1) -> 'v'
-                    Point(-1, 0) -> '<'
-                    Point(1, 0) -> '>'
-                    else -> throw IllegalArgumentException("Invalid direction")
+            val pointsLists = paths.first
+            val directionsList = pointsLists.map { pointsList ->
+                val directions = pointsList.removeFirst().mapIndexed { i, p ->
+                    val vector = p - pointsList[i]!!
+                    when (vector) {
+                        Point(0, -1) -> '^'
+                        Point(0, 1) -> 'v'
+                        Point(-1, 0) -> '<'
+                        Point(1, 0) -> '>'
+                        else -> throw IllegalArgumentException("Invalid direction")
+                    }
                 }
+                directions + listOf('A')
             }
+
             start = end
-            directions + listOf('A')
+            directionsList
         }
         return moves
     }
