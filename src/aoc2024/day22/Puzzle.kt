@@ -35,7 +35,7 @@ class Puzzle {
         }
     }
 
-    val part2ExpectedResult = 0L
+    val part2ExpectedResult = 23L
     fun part2(rawInput: List<String>): Result {
         val input = clean(rawInput)
         val seqToCombis = input.map { seq ->
@@ -59,8 +59,18 @@ class Puzzle {
             seq to map
         }
 
+        val m2 = mutableMapOf<List<Int>, List<Int>>()
+        seqToCombis.forEach { (seq, bestCombisMap) ->
+            bestCombisMap.entries.forEach{ (k,v)->
+                val orDefault = m2.getOrDefault(k, mutableListOf()).toMutableList()
+                orDefault.add(v)
+                m2.put(k,orDefault)
+            }
+        }
 
-        return 0L
+
+        val first = m2.entries.map { (k, v) -> v.sum() }.max()
+        return  first!!.toLong()
     }
 
     inline fun <T, R> Iterable<T>.zipWithNext4(transform: (a: List<T>) -> R): List<R> {
