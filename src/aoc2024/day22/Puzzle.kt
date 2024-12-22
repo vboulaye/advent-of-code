@@ -22,55 +22,41 @@ class Puzzle {
             .map { line -> line.toInt() }
     }
 
-    val part1ExpectedResult = 37327623L
+    val part1ExpectedResult = 37990510L
     fun part1(rawInput: List<String>): Result {
         val input = clean(rawInput)
         return input.sumOf { seq ->
-            var s = seq.toLong()
-            (1..2000).forEach { i ->
-                s = next(s)
-                //println(i.toString().toString() + " -> " + s)
-            }
-            s
+            (1..2000).fold(seq.toLong()) { acc, _ -> next(acc) }
         }
     }
 
     val part2ExpectedResult = 23L
     fun part2(rawInput: List<String>): Result {
         val input = clean(rawInput)
-        val seqToCombis = input.map { seq ->
+        val seqToCombis: List<Pair<Int, Map<List<Int>, Int>>> = input.map { seq ->
             val bananas = bananas(seq)
             val changes = bananas(seq).zipWithNext { a, b -> b - a }
-            val combis = changes.zipWithNext4 { a -> a }
+            val combis = changes.zipWithNext4 { it }
             val bestCombis = combis
-                .mapIndexed { index, pair ->
-
+                .mapIndexedNotNull { index, pair ->
                     val bananaIndex = index + 4
-                    if (bananaIndex >= bananas.size) {
-                        Int.MIN_VALUE to pair
-                    } else {
+                    if (bananaIndex < bananas.size) {
                         bananas[bananaIndex] to pair
-                    }
+                    } else null
                 }
-            val map = mutableMapOf<List<Int>, Int>()
-            bestCombis.forEach { scorToCombi ->
-                map.computeIfAbsent(scorToCombi.second) { scorToCombi.first }
-            }
-            seq to map
+            val combinationsToValue = bestCombis.groupBy({ it.second }, {it.first}).mapValues { it.value[0] }
+            seq to combinationsToValue
         }
 
-        val m2 = mutableMapOf<List<Int>, List<Int>>()
-        seqToCombis.forEach { (seq, bestCombisMap) ->
-            bestCombisMap.entries.forEach{ (k,v)->
-                val orDefault = m2.getOrDefault(k, mutableListOf()).toMutableList()
-                orDefault.add(v)
-                m2.put(k,orDefault)
-            }
+        val combinationToValuesList = seqToCombis.map {
+            it.second.entries
         }
+        return combinationToValuesList
+            .flatten()
+            .groupBy({ it.key }, { it.value })
+            .map { (k, v) -> v.sum() }
+            .max().toLong()
 
-
-        val first = m2.entries.map { (k, v) -> v.sum() }.max()
-        return  first!!.toLong()
     }
 
     inline fun <T, R> Iterable<T>.zipWithNext4(transform: (a: List<T>) -> R): List<R> {
@@ -118,6 +104,7 @@ class Puzzle {
         return s3
     }
 
+
     private fun mixAndPrune(value: Long, secret: Long): Long {
         val mix = value xor secret
         return mix.mod(16777216L)
@@ -147,7 +134,7 @@ fun main() {
         println("${part}: test took ${testDuration.inWholeMilliseconds}ms, full took ${fullDuration.inWholeMilliseconds}ms")
     }
 
-//    runPart("part1", puzzle.part1ExpectedResult, puzzle::part1)
+    runPart("part1", puzzle.part1ExpectedResult, puzzle::part1)
     runPart("part2", puzzle.part2ExpectedResult, puzzle::part2)
 
 }
