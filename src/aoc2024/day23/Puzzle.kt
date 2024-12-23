@@ -1,11 +1,12 @@
 package aoc2024.day23
 
+import utils.containsPoint
 import utils.initDijkstra
 import utils.readInput
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
-typealias Result = Int
+typealias Result = String
 
 
 class Puzzle {
@@ -23,7 +24,7 @@ class Puzzle {
             .map { line -> line.split("-") }
     }
 
-    val part1ExpectedResult = 7
+    val part1ExpectedResult = "7"
     fun part1(rawInput: List<String>): Result {
         val input = clean(rawInput)
         val links = input
@@ -32,9 +33,9 @@ class Puzzle {
         val tComputers = links.keys.filter { it.startsWith("t") }.distinct().sorted()
 
         val groups = tComputers.flatMap {
-             getConnected(it, links.toMutableMap())
+            getConnected(it, links.toMutableMap())
         }.distinct()
-        return groups.count()
+        return groups.count().toString()
     }
 
     private fun getConnected(computer: String, links: MutableMap<String, List<String>>): List<List<String>> {
@@ -83,11 +84,66 @@ class Puzzle {
 //        return connections + next
     }
 
-    val part2ExpectedResult = 0
+    val part2ExpectedResult = "co,de,ka,ta"
     fun part2(rawInput: List<String>): Result {
         val input = clean(rawInput)
+        val links = input
+            .flatMap { listOf(it[0] to it[1], it[1] to it[0]) }
+            .groupBy({ it.first }, { it.second })
+            .entries
+            .map { (k,v)-> k to v.toSet() }
+            .toMap()
+            .toMutableMap()
+        val tComputers = links.keys.distinct().sorted()
+        val groups = tComputers.mapIndexed { i,stqrt->
+            println(i)
+            val connected3 = getConnected3(stqrt, links.toMutableMap(), setOf(stqrt))
+            connected3.forEach { conn ->
+                conn.forEach {
+                    links[it] =  links[it]!!.filter { !conn.contains(it) }.toSet()
+                }
+            }
+            val maxBy = connected3
+                .map { it.sorted().joinToString(",") }
+                .maxBy { it.length }
 
-        return 0
+            println(maxBy)
+            maxBy
+        }.distinct()
+        return groups.maxBy { it.length }
+    }
+//aa, st, rv, ec, aw, tw, bf, sx, oi, zw, ex, vr
+//aa,st,rv,ec,aw,sx,oi,zw,jc,vr,ex,bf
+//aa,aw,bf,ec,ex,oi,rv,st,sx,tw,vr,zw
+    private fun getConnected3(
+        computer: String,
+        links: MutableMap<String, Collection<String>>,
+        targetLinks: Set<String>
+    ): List<Set<String>> {
+
+        val next = links[computer]!!
+
+
+        val map = next
+
+            .filter { !targetLinks.contains(it)  }
+            .filter {  val strings = links[it]!!
+                val containsAll = strings.containsAll(targetLinks)
+                if(!containsAll) {
+                    links[computer]= links[computer]!!.filter {  a-> a!=it }
+                    links[it]= links[it]!!.filter {  a-> a!=computer }
+                }
+                containsAll
+            }
+            .flatMap { getConnected3(it, links, targetLinks + listOf(it)) }
+            .map { it.toSet() }
+            .distinct()
+//        println("computer"+computer+" targetLikns"+targetLinks+" map "+map)
+        if (map.isEmpty()) {
+            return listOf(targetLinks)
+        }
+
+        return map
     }
 
 }
