@@ -84,7 +84,7 @@ class Dijkstra<DijkstraPoint, DijkstraDistance>(
         start: DijkstraPoint,
         end: DijkstraPoint,
         nextGetter: (DijkstraPoint, MutableMap<DijkstraPoint, DijkstraPoint>) -> List<Pair<DijkstraPoint, DijkstraDistance>>
-    ): Pair<List<DijkstraPoint>, DijkstraDistance> {
+    ): Pair<List<DijkstraPoint>, DijkstraDistance & Any> {
         val distances = mutableMapOf<DijkstraPoint, DijkstraDistance>().withDefault { this.maxDistance }
         val priorityQueue =
             PriorityQueue<Pair<DijkstraPoint, DijkstraDistance>> { a, b -> comparator.compare(a.second, b.second) }
