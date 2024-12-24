@@ -5,6 +5,7 @@ import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
 typealias Result = Long
+typealias Result2 = String
 
 
 class Puzzle {
@@ -97,11 +98,11 @@ class Puzzle {
         return input.getZ()
     }
 
-    val part2ExpectedResult = 0L
-    fun part2(rawInput: List<String>): Result {
+    val part2ExpectedResult = ""
+    fun part2(rawInput: List<String>): Result2 {
         val input = clean(rawInput)
 
-        return 0L
+        return ""
     }
 
 }
@@ -115,7 +116,7 @@ fun main() {
     val testInput = readInput("00test", Puzzle::class)
     val input = readInput("zzdata", Puzzle::class)
 
-    fun runPart(part: String, expectedTestResult: Result, partEvaluator: (List<String>) -> Result) {
+    fun <R> runPart(part: String, expectedTestResult: R, partEvaluator: (List<String>) -> R) {
         val testDuration = measureTime {
             val testResult = partEvaluator(testInput)
             println("test ${part}: $testResult == ${expectedTestResult}")
@@ -128,7 +129,7 @@ fun main() {
         println("${part}: test took ${testDuration.inWholeMilliseconds}ms, full took ${fullDuration.inWholeMilliseconds}ms")
     }
 
-    runPart("part1", puzzle.part1ExpectedResult, puzzle::part1)
-    runPart("part2", puzzle.part2ExpectedResult, puzzle::part2)
+    runPart<Result>("part1", puzzle.part1ExpectedResult, puzzle::part1)
+    runPart<Result2>("part2", puzzle.part2ExpectedResult, puzzle::part2)
 
 }
