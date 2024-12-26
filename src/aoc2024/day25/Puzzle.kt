@@ -1,6 +1,7 @@
-package aoc2024.dayzz
+package aoc2024.day25
 
 import utils.readInput
+import java.util.random.RandomGeneratorFactory.all
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
@@ -11,17 +12,68 @@ typealias Result2 = Int
 class Puzzle {
 
 
-    fun parseInput(rawInput: List<String>): List<String> {
-        return rawInput
+    fun parseInput(rawInput: List<String>): Pair<MutableList<List<Int>>, MutableList<List<Int>>> {
+        val locks = mutableListOf<List<Int>>()
+        val keys = mutableListOf<List<Int>>()
+
+
+        val grid = mutableListOf<List<Char>>()
+
+        rawInput
             .filter { line -> true }
-            .map { line -> line }
+            .forEach { line ->
+                if (line.trim().isEmpty()) {
+                    processGrid(grid, locks, keys)
+                    grid.clear()
+                } else {
+                    grid.add(line.toList())
+                }
+            }
+
+        if (!grid.isEmpty())
+        processGrid(grid, locks, keys)
+
+        return locks to keys
     }
 
-    val part1ExpectedResult: Result1 = 0
+    private fun processGrid(
+        grid: MutableList<List<Char>>,
+        locks: MutableList<List<Int>>,
+        keys: MutableList<List<Int>>
+    ): Boolean {
+        val firstLine = grid[0]
+        val width = firstLine.size
+        return if (firstLine.all { it == '#' }) {
+            locks.add(
+                grid.fold(MutableList(width) { -1 })
+                { acc, row ->
+                    row.forEachIndexed { index, v -> acc[index] += if (v == '#') 1 else 0 }
+                    acc
+                }
+            )
+        } else {
+            keys.add(
+                grid.reversed().fold(MutableList(width) { -1 })
+                { acc, row ->
+                    row.forEachIndexed { index, v -> acc[index] += if (v == '#') 1 else 0 }
+                    acc
+                }
+            )
+        }
+    }
+
+    val part1ExpectedResult: Result1 = 3
     fun part1(rawInput: List<String>): Result1 {
         val input = parseInput(rawInput)
-
-        return 0
+        val filter = input.first.flatMap { lock ->
+            input.second.map { key ->
+                lock to key
+            }
+        }
+            .filter { (lock, key) ->
+                lock.indices.all { lock[it] + key[it] <= 5 }
+            }
+        return filter.size
     }
 
     val part2ExpectedResult: Result2 = 0
