@@ -14,11 +14,11 @@ class Puzzle {
 
     fun parseInput(rawInput: List<String>): List<Int> {
         return rawInput
-            .filter { line -> true }
             .map { line ->
-                when {
-                    line.startsWith("L") -> -line.removePrefix("L").toInt()
-                    line.startsWith("R") -> +line.removePrefix("R").toInt()
+                val (sign, value) = line[0] to line.substring(1)
+                when (sign) {
+                    'L' -> -value.toInt()
+                    'R' -> value.toInt()
                     else -> throw IllegalArgumentException("Unexpected line $line")
                 }
             }
@@ -28,15 +28,10 @@ class Puzzle {
     fun part1(rawInput: List<String>): Result1 {
         val input = parseInput(rawInput)
         var direction = 50
-        var key = 0
-        for (mov in input) {
-            // println(direction)
-            direction = (direction + mov + 100) % 100
-            if (direction == 0) {
-                key++
-            }
+        return input.fold(0) { key, mov ->
+            direction = (direction + mov%100 + 100) % 100
+            if (direction == 0) key + 1 else key
         }
-        return key
     }
 
     val part2ExpectedResult: Result2 = 6
@@ -45,23 +40,20 @@ class Puzzle {
         var direction = 50
         var key = 0
         for (mov in input) {
-            val newDir = (direction + mov%100 + 100) % 100
+            val newDir = (direction + mov % 100 + 100) % 100
             val counter = abs(mov) / 100
             if (counter > 0) {
                 key += counter
             }
             if (newDir == 0) {
-                println("" + direction + " " + mov + " -> " + newDir + " = " + 0)
+//                println("" + direction + " " + mov + " -> " + newDir + " = " + 0)
                 key++
-            } else if ((direction != 0 && direction + mov%100 > 100) || (direction != 0 && direction + mov%100 < 0)) {
-                println("" + direction + " " + mov + " -> " + newDir + " = " + 0)
+            } else if ((direction != 0 && direction + mov % 100 > 100) || (direction != 0 && direction + mov % 100 < 0)) {
+//                println("" + direction + " " + mov + " -> " + newDir + " = " + 0)
                 key++
             } else {
-                println("" + direction + " " + mov + " -> " + newDir)
+//                println("" + direction + " " + mov + " -> " + newDir)
             }
-            //2502 too low
-            // 6825 too high
-            // 6777 too high
             direction = newDir
 
         }
