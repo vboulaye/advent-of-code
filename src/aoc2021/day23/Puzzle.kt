@@ -18,7 +18,7 @@ class Puzzle {
         return s.split(Regex(" *\\+ *"))
             .sumOf {
                 val (steps, typ) = it.split(Regex(" *\\* *"))
-                val valueStep = steps.toInt() * when (typ.toUpperCase()[0]) {
+                val valueStep = steps.toInt() * when (typ.uppercase()[0]) {
                     'A' -> 1
                     'B' -> 10
                     'C' -> 100
