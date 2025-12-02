@@ -4,27 +4,44 @@ import utils.readInput
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
-typealias Result1 = Int
-typealias Result2 = Int
+typealias Result1 = Long
+typealias Result2 = Long
 
 
 class Puzzle {
 
 
-    fun parseInput(rawInput: List<String>): List<String> {
-        return rawInput
+    fun parseInput(rawInput: List<String>): List<List<String>> {
+        return rawInput[0].split(",")
             .filter { line -> true }
-            .map { line -> line }
+            .map { it.split("-") }
     }
 
-    val part1ExpectedResult: Result1 = 0
+    val part1ExpectedResult: Result1 = 1227775554
     fun part1(rawInput: List<String>): Result1 {
         val input = parseInput(rawInput)
 
-        return 0
+        var result = 0L
+        for (interval in input) {
+            println(interval)
+            for (i in interval[0].toLong()..interval[1].toLong()) {
+                if (isInvalid(i)) {
+                    println("*"+i)
+                    result += i
+                }
+            }
+        }
+        return result
     }
 
-    val part2ExpectedResult: Result2 = 0
+    private fun isInvalid(i: Long): Boolean {
+        val stringPattern = i.toString()
+        if(stringPattern.length%2 == 1) {return false}
+        return stringPattern.substring(0,stringPattern.length/2) ==
+                stringPattern.substring(stringPattern.length/2,stringPattern.length)
+    }
+
+    val part2ExpectedResult: Result2 = 0L
     fun part2(rawInput: List<String>): Result2 {
         val input = parseInput(rawInput)
 
