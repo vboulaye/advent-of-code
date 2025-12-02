@@ -4,31 +4,74 @@ import utils.readInput
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
 
-typealias Result1 = Int
-typealias Result2 = Int
+typealias Result1 = Long
+typealias Result2 = Long
 
 
 class Puzzle {
 
 
-    fun parseInput(rawInput: List<String>): List<String> {
-        return rawInput
-            .filter { line -> true }
-            .map { line -> line }
+    fun parseInput(rawInput: List<String>): List<List<String>> {
+        return rawInput[0]
+            .split(",")
+            .map { it.split("-") }
     }
 
-    val part1ExpectedResult: Result1 = 0
+    val part1ExpectedResult: Result1 = 1227775554
     fun part1(rawInput: List<String>): Result1 {
         val input = parseInput(rawInput)
-
-        return 0
+        return input.fold(0L) { result, interval ->
+            result + (interval[0].toLong()..interval[1].toLong())
+                .filter { isInvalid(it) }
+                .sum()
+        }
     }
 
-    val part2ExpectedResult: Result2 = 0
+    private fun isInvalid(i: Long): Boolean {
+        val stringPattern = i.toString()
+        if (stringPattern.length % 2 == 1) {
+            return false
+        }
+        return stringPattern.take(stringPattern.length / 2) ==
+                stringPattern.substring(stringPattern.length / 2)
+    }
+
+    private fun isInvalid2(i: Long): Boolean {
+        val stringPattern = i.toString()
+//        for (l in 1..<stringPattern.length) {
+//            if (stringPattern.length % l == 0) {
+//                if (stringPattern.chunked(l).toSet().size == 1) {
+//                    return true
+//                }
+//            }
+//        }
+        for (l in 1..stringPattern.length / 2) {
+            if (stringPattern.length % l == 0) {
+                val block = stringPattern.take(l)
+                if (block.repeat(stringPattern.length / l) == stringPattern) {
+                    return true
+                }
+            }
+        }
+//        (1..stringPattern.length / 2).forEach {
+//            if (stringPattern.length % it == 0) {
+//                val block = stringPattern.take(it)
+//                if (block.repeat(stringPattern.length / it) == stringPattern) {
+//                    return true
+//                }
+//            }
+//        }
+        return false
+    }
+
+    val part2ExpectedResult: Result2 = 4174379265L
     fun part2(rawInput: List<String>): Result2 {
         val input = parseInput(rawInput)
-
-        return 0
+        return input.fold(0L) { result, interval ->
+            result + (interval[0].toLong()..interval[1].toLong())
+                .filter { isInvalid2(it) }
+                .sum()
+        }
     }
 
 }
