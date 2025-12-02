@@ -1,5 +1,6 @@
 package aoc2025.dayzz
 
+import aoc2021.day19.c
 import utils.readInput
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -26,7 +27,7 @@ class Puzzle {
             println(interval)
             for (i in interval[0].toLong()..interval[1].toLong()) {
                 if (isInvalid(i)) {
-                    println("*"+i)
+                    println("*" + i)
                     result += i
                 }
             }
@@ -36,16 +37,43 @@ class Puzzle {
 
     private fun isInvalid(i: Long): Boolean {
         val stringPattern = i.toString()
-        if(stringPattern.length%2 == 1) {return false}
-        return stringPattern.substring(0,stringPattern.length/2) ==
-                stringPattern.substring(stringPattern.length/2,stringPattern.length)
+        if (stringPattern.length % 2 == 1) {
+            return false
+        }
+        return stringPattern.substring(0, stringPattern.length / 2) ==
+                stringPattern.substring(stringPattern.length / 2, stringPattern.length)
     }
 
-    val part2ExpectedResult: Result2 = 0L
+    private fun isInvalid2(i: Long): Boolean {
+        val stringPattern = i.toString()
+        if (stringPattern.length == 2 && isInvalid(i)) {
+            return true
+        } else
+            for (l in 1..stringPattern.length - 1) {
+                if (stringPattern.length % l == 0) {
+                    if (stringPattern.chunked(l).toSet().size == 1) {
+                        return true
+                    }
+                }
+            }
+
+        return false
+    }
+
+    val part2ExpectedResult: Result2 = 4174379265L
     fun part2(rawInput: List<String>): Result2 {
         val input = parseInput(rawInput)
-
-        return 0
+        var result = 0L
+        for (interval in input) {
+            println(interval)
+            for (i in interval[0].toLong()..interval[1].toLong()) {
+                if (isInvalid2(i)) {
+                    println("*" + i)
+                    result += i
+                }
+            }
+        }
+        return result
     }
 
 }
