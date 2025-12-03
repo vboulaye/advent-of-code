@@ -1,6 +1,5 @@
 package aoc2025.day03
 
-import org.jetbrains.kotlinx.multik.ndarray.complex.Complex.Companion.i
 import utils.readInput
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -23,29 +22,8 @@ class Puzzle {
         val input = parseInput(rawInput)
 
         var result = 0
-//        for (chars in input) {
-//            var list= chars
-//            var first = list.sorted().last()
-//            while (chars.indexOf(first)==chars.size-1) {
-//                list=list.take(list.size - 1)
-//                first = list.sorted().last()
-//            }
-//            val value: String
-//
-//            val subList = chars.subList(chars.indexOf(first) + 1, chars.size)
-//            var second = subList.sorted().last()
-//            value=first+second
-//            println(value)
-//            result += value.toInt()
-//        }
-
         for (chars in input) {
-            var first = chars.subList(0, chars.size - 1).sorted().last()
-            val value: String
-            val subList = chars.subList(chars.indexOf(first) + 1, chars.size)
-            var second = subList.sorted().last()
-            value = first + second
-            println(value)
+            val value: String = computeMaxValue(chars, 2)
             result += value.toInt()
         }
         return result
@@ -57,34 +35,32 @@ class Puzzle {
 
         var result = 0L
         for (chars in input) {
-            var list2 = chars
-            var ok = false
-            var value: String = "x"
-            while (!ok) {
-                try {
-                    var currentMax = list2.subList(0, list2.size - 11).sorted().last()
-                    value = currentMax
-                    var subList = list2
-                    for (i in 10 downTo 0) {
-                        subList = subList.subList(subList.indexOf(currentMax) + 1, subList.size)
-                        currentMax = subList.subList(0, subList.size - i).sorted().last()
-                        value += currentMax
-                    }
-                    ok = true
-                } catch (e: Exception) {
-                    list2 = list2.take(list2.size - 1)
-                }
-            }
-
-//            var subList = chars.subList(chars.indexOf(first) + 1, chars.size)
-//            var second = subList.subList(0, chars.size - 10).sorted().last()
-//             subList = chars.subList(chars.indexOf(second) + 1, chars.size)
-//            var third = subList.subList(0, chars.size - 9).sorted().last()
-//              subList = chars.subList(chars.indexOf(third) + 1, chars.size)
-//            value = first + second
-            println(value)
+            val value: String = computeMaxValue(chars, 12)
             result += value.toLong()
         }
+        return result
+    }
+
+    private fun computeMaxValue(chars: List<String>, totalDigitsToFind: Int): String {
+        var result = ""
+
+        var remainingChars = chars
+
+        for (remainingBlocSize in (totalDigitsToFind - 1) downTo 0) {
+
+            // look for the max in the sublist that allows to have enough remaining chars
+            val searchRangeEnd = remainingChars.size - remainingBlocSize
+            val maxDigit = remainingChars.subList(0, searchRangeEnd).maxOf { it }
+
+
+            // update the work list starting from the max we found
+            val indexOfMaxDigit = remainingChars.indexOf(maxDigit)
+            remainingChars = remainingChars.subList(indexOfMaxDigit + 1, remainingChars.size)
+
+            // append the found max digit to the result
+            result += maxDigit
+        }
+        println(result)
         return result
     }
 
