@@ -11,17 +11,33 @@ typealias Result2 = Int
 class Puzzle {
 
 
-    fun parseInput(rawInput: List<String>): List<String> {
+    fun parseInput(rawInput: List<String>): List<List<String>> {
         return rawInput
             .filter { line -> true }
-            .map { line -> line }
+            .map { line -> line.toList().map { it.toString() } }
     }
 
-    val part1ExpectedResult: Result1 = 0
+    val part1ExpectedResult: Result1 = 357
     fun part1(rawInput: List<String>): Result1 {
         val input = parseInput(rawInput)
 
-        return 0
+        var result = 0
+        for (chars in input) {
+            var list= chars
+            var first = list.sorted().last()
+            while (chars.indexOf(first)==chars.size-1) {
+                list=list.take(list.size - 1)
+                first = list.sorted().last()
+            }
+            val value: String
+
+            val subList = chars.subList(chars.indexOf(first) + 1, chars.size)
+            var second = subList.sorted().last()
+            value=first+second
+            println(value)
+            result += value.toInt()
+        }
+        return result
     }
 
     val part2ExpectedResult: Result2 = 0
