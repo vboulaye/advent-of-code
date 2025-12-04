@@ -1,6 +1,6 @@
 package aoc2025.day04
 
-import org.jetbrains.kotlinx.multik.ndarray.complex.Complex.Companion.i
+import utils.Point
 import utils.readInput
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -19,66 +19,56 @@ class Puzzle {
     }
 
     val part1ExpectedResult: Result1 = 13
-    private fun count(x: Int, y: Int, input: List<List<Char>>): Int {
 
-        var c = 0
-        for (dy in -1..1) {
-            for (dx in -1..1) {
-                if (dx == 0 && dy == 0) continue
-                var nx = x + dx
-                var ny = y + dy
-                if (ny in input.indices && nx in input[ny].indices) {
-                    if (input[ny][nx] == '@') {
-                        c++
-                    }
+    private fun getBalls(input: MutableList<MutableList<Char>>): MutableSet<Point> {
+        val result1 = mutableSetOf<Point>()
+        for (y in input.indices) {
+            val line = input[y]
+            for (x in line.indices) {
+                if (input[y][x] == '@') {
+                    //println("found at $y,$x")
+                    result1 += Point(x, y)
                 }
             }
         }
-        return c
+        return result1
+
     }
 
     fun part1(rawInput: List<String>): Result1 {
         val input = parseInput(rawInput)
-        var result = 0
-        for (y in input.indices) {
-            val line = input[y]
-            // Implement the logic for part 1 here
-            for (x in line.indices) {
-                if (input[y][x] == '@' && count(x, y, input) < 4) {
-                    println("found at $y,$x")
-                    result++
-                }
-            }
-        }
-        return result
+        val balls = getBalls(input)
+        val result = getPossibleRolls(balls)
+        return result.size
     }
 
     val part2ExpectedResult: Result2 = 43
     fun part2(rawInput: List<String>): Result2 {
         val input = parseInput(rawInput)
-        var result = 0
-        var round: Int=-1
-        while(round!=0) {
-            round = removePossible(input)
-            result+=round
-        }
-        return result
+
+        val balls = getBalls(input)
+        var total = 0
+        do {
+            val possibleRolls = getPossibleRolls(balls)
+            balls.removeAll(possibleRolls)
+            total += possibleRolls.size
+        } while (possibleRolls.isNotEmpty())
+
+        return total
     }
 
-    private fun removePossible(input: MutableList<MutableList<Char>>): Int {
-        var result1 = 0
-        for (y in input.indices) {
-            val line = input[y]
-            // Implement the logic for part 1 here
-            for (x in line.indices) {
-                if (input[y][x] == '@' && count(x, y, input) < 4) {
-                    println("found at $y,$x")
-                    input[y][x]= 'x'
-                    result1++
-                }
+    private fun getPossibleRolls(input: Set<Point>): List<Point> {
+        return input.filter { countSurroundingBalls(it, input) < 4 }
+    }
+
+    private fun countSurroundingBalls(point: Point, balls: Set<Point>): Int {
+        var c = 0
+        for (p in point.allNeighbours()) {
+            if (p in balls) {
+                c++
             }
         }
-        return result1
+        return c
     }
 
 }

@@ -56,6 +56,18 @@ data class Point(val x: Int, val y: Int) : Serializable, Comparable<Point> {
             this + Point(-1, 0),
         )
     }
+    fun allNeighbours(): List<Point> {
+        return listOf(
+            this + Point(0, 1),
+            this + Point(0, -1),
+            this + Point(1, 0),
+            this + Point(1, 1),
+            this + Point(1, -1),
+            this + Point(-1, 0),
+            this + Point(-1, -1),
+            this + Point(-1, 1),
+        )
+    }
 
     fun modulo(dims: Point): Point {
         return Point(x.mod(dims.x), y.mod(dims.y))
