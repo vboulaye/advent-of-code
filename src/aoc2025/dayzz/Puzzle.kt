@@ -21,14 +21,18 @@ class Puzzle {
     fun part1(rawInput: List<String>): Result1 {
         val input = parseInput(rawInput)
 
-        return 0
+        var result = input.size
+
+        return result
     }
 
     val part2ExpectedResult: Result2 = 0
     fun part2(rawInput: List<String>): Result2 {
         val input = parseInput(rawInput)
 
-        return 0
+        var result = input.size
+
+        return result
     }
 
 }
