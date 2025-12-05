@@ -1,6 +1,5 @@
 package aoc2025.day05
 
-import sun.font.GlyphLayout.done
 import utils.readInput
 import kotlin.time.ExperimentalTime
 import kotlin.time.measureTime
@@ -18,20 +17,17 @@ class Puzzle {
 
     fun parseInput(rawInput: List<String>): Game {
 
-        var insideRange = true
-        val ranges = mutableListOf<LongRange>()
-        val ids = mutableListOf<Long>()
-        for ((index, string) in rawInput.withIndex()) {
-            if (string.isEmpty()) {
-                insideRange = false
-            } else if (insideRange) {
-                val r = string.split("-").map { it.toLong() }
-                val r2 = (r[0]..r[1])
-                ranges.add(r2)
-            } else {
-                ids.add(string.toLong())
+        val ranges = rawInput
+            .takeWhile { it.isNotEmpty() }
+            .map {
+                val (start, end) = it.split("-").map(String::toLong)
+                start..end
             }
-        }
+
+        val ids = rawInput
+            .dropWhile { it.isNotEmpty() }
+            .drop(1)
+            .map(String::toLong)
 
         return Game(ranges, ids)
     }
@@ -39,29 +35,19 @@ class Puzzle {
     val part1ExpectedResult: Result1 = 3
     fun part1(rawInput: List<String>): Result1 {
         val input = parseInput(rawInput)
-
-        var result = 0
-        input.ids.forEach { id ->
-            input.ranges.any { range -> id in range }.let { contained ->
-                if (contained) {
-                    result += 1
-                }
-            }
-        }
-        return result
+        return input.ids.count { id -> input.ranges.any { id in it } }
     }
 
     val part2ExpectedResult: Result2 = 14L
     fun part2(rawInput: List<String>): Result2 {
         val input = parseInput(rawInput)
 
-
-        var ranges: List<LongRange> =input.ranges
+        var ranges: List<LongRange> = input.ranges
         do {
-            val prev=ranges.toList()
+            val prev = ranges.toList()
             ranges = merge(ranges)
         } while (ranges.size != prev.size)
-        return ranges.sumOf { range -> range.endInclusive - range.start +1 }
+        return ranges.sumOf { range -> range.endInclusive - range.start + 1 }
     }
 
     private fun merge(ranges: List<LongRange>): List<LongRange> {
