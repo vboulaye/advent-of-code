@@ -18,13 +18,8 @@ class Puzzle {
 
     fun parseInput(rawInput: List<String>): Game {
         val numbers = rawInput
-            .filter { line -> true }
-            .take(rawInput.size - 1)
-            .map { line -> //println(line);
-                line.trim().split(Regex(" +")).map { //println("==="+it);
-                    it.toLong()
-                }
-            }
+            .dropLast(1)
+            .map { line -> line.trim().split(Regex(" +")).map { it.toLong() } }
         val operations: List<String> = rawInput.last().split(Regex(" +"))
         return Game(numbers, operations)
     }
@@ -35,35 +30,20 @@ class Puzzle {
         val transposedNumbers = input.numbers[0].indices.map { col ->
             input.numbers.map { row -> row[col] }
         }
-        val result = input.operations.foldIndexed(0L) { idx, acc, op ->
-            val foldIndexed = transposedNumbers[idx].drop(1)
-                .fold(transposedNumbers[idx][0]) { acc, n ->
-                    when (op) {
-                        "+" -> acc + n
-                        "*" -> acc * n
-                        "-" -> acc - n
-                        "/" -> acc / n
-                        else -> error("Unknown operation")
-                    }
-                }
-//            println(op + " = " + foldIndexed)
-            foldIndexed + acc
-        }
-
+        val result = calc(input, transposedNumbers)
         return result
     }
 
 
     fun parseInput2(rawInput: List<String>): Game {
-        var numbers = mutableListOf<List<Long>>()
+        val numbers = mutableListOf<List<Long>>()
         var numbersBloc = mutableListOf<Long>()
-        (rawInput.map { it.length - 1 }.max() downTo 0)
-
+        (rawInput.maxOf { it.length - 1 } downTo 0)
             .forEach { colIndex ->
-                println(colIndex)
                 val col = rawInput
                     .take(rawInput.size - 1)
-                    .map { line -> if(colIndex<line.length)  line[colIndex] else  ' ' }
+                    .map { line -> if (colIndex < line.length) line[colIndex] else ' ' }
+
                 if (col.all { it == ' ' }) {
                     numbers.add(numbersBloc)
                     numbersBloc = mutableListOf<Long>()
@@ -77,14 +57,6 @@ class Puzzle {
             }
 
         numbers.add(numbersBloc)
-        println(numbers)
-//        val numbers = rawInput
-//            .take(rawInput.size - 1)
-//            .map { line -> //println(line);
-//                line.trim().split(Regex(" +")).map { //println("==="+it);
-//                    it.toLong()
-//                }
-//            }
         val operations: List<String> = rawInput.last().split(Regex(" +")).reversed()
         return Game(numbers, operations)
     }
@@ -92,30 +64,15 @@ class Puzzle {
     val part2ExpectedResult: Result2 = 3263827L
     fun part2(rawInput: List<String>): Result2 {
         val input = parseInput2(rawInput)
-        var transposedNumbers = input.numbers
-//        var transposedNumbers = input.numbers[0].indices.map { col ->
-//            input.numbers.map { row -> row[col] }
-//        }
-//
-//        transposedNumbers = transposedNumbers.map { row ->
-//            var updateableList = row.toList()
-//            val workList = row.toMutableList()
-//            var idx = 0
-//            for (idx in 0..3) {
-//
-//                println("input " + updateableList + "  " + idx)
-//                val newNumber = updateableList
-//                    .map { number -> val padStart = number.toString().padStart(4, '0')
-//                       // println("..." +number+" ->"+ padStart + " " + idx +" /"+    padStart[idx]+"/")
-//                        padStart[idx]
-//                    }
-//                    .filter { it != ' ' }
-//                    .joinToString("").toLong()
-//                workList.add(newNumber)
-//                println("outpu " + newNumber + "  " + idx)
-//            }
-//            workList
-//        }
+        val transposedNumbers = input.numbers
+        val result = calc(input, transposedNumbers)
+        return result
+    }
+
+    private fun calc(
+        input: Game,
+        transposedNumbers: List<List<Long>>
+    ): Long {
         val result = input.operations.foldIndexed(0L) { idx, acc, op ->
             val foldIndexed = transposedNumbers[idx].drop(1)
                 .fold(transposedNumbers[idx][0]) { acc, n ->
@@ -127,7 +84,6 @@ class Puzzle {
                         else -> error("Unknown operation")
                     }
                 }
-//            println(op + " = " + foldIndexed)
             foldIndexed + acc
         }
         return result
