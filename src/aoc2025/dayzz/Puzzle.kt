@@ -21,7 +21,7 @@ class Puzzle {
     fun part1(rawInput: List<String>): Result1 {
         val input = parseInput(rawInput)
 
-        var result = input.size
+        var result = 0
 
         return result
     }
@@ -30,7 +30,7 @@ class Puzzle {
     fun part2(rawInput: List<String>): Result2 {
         val input = parseInput(rawInput)
 
-        var result = input.size
+        var result = 0
 
         return result
     }
